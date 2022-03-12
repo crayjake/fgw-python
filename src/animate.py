@@ -3,6 +3,7 @@ import numpy as np
 from tqdm import tqdm
 import os
 import math
+import time
 
 import matplotlib
 #matplotlib.use('Agg')
@@ -54,7 +55,7 @@ class animator():
             fig, ax = plt.subplots()
             
             if plotType == Plot.STREAM:
-                c = ax.pcolor(x, z, inp.b[::,::skip], cmap='plasma', shading='auto', zorder=0)#, norm=divnorm)
+                c = ax.pcolor(x, z, inp.b[::,::skip] * (273 / 10), cmap='plasma', shading='auto', zorder=0)#, norm=divnorm)
                 sp = ax.streamplot(x, z, inp.u[::,::skip], inp.w[::,::skip], color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
 
                 fig.colorbar(c, ax=ax)
@@ -65,11 +66,13 @@ class animator():
                 if lineType == LineType.W or lineType == LineType.ALL:
                     ax.plot(data.meta.x[0,::skip]/1000, inp.w[0][::skip]*10, f'k{"-" if lineType == LineType.ALL else ""}')
                 if lineType == LineType.B or lineType == LineType.ALL:
-                    ax.plot(data.meta.x[0,::skip]/1000, inp.b[0][::skip]*10, f'k{":" if lineType == LineType.ALL else ""}')
+                    ax.plot(data.meta.x[0,::skip]/1000, inp.b[0][::skip] * (273 / 10), f'k{":" if lineType == LineType.ALL else ""}')
                 if lineType == LineType.P:
                     ax.plot(data.meta.x[0,::skip]/1000, inp.p[0][::skip]*10, f'k')
 
-            if title: plt.title(data.meta.title(inp.t), pad=30)
+            if title:        
+                timeString = time.strftime('%H:%M:%S', time.gmtime(inp.t))
+                plt.title(f't = {timeString}')
 
             fig.savefig(f'{path}/images/{prefix}/{index}.jpg', bbox_inches='tight', transparent=False, facecolor='white')
             plt.close(fig)
@@ -95,16 +98,11 @@ class animator():
 
         #c = ax.pcolor(data.meta.x[::,::skip]/1000, data.meta.z[::,::skip]/1000, inp.b[::,::skip] * (273 / 10), cmap=plt.get_cmap('bwr', 30), shading='auto', zorder=0, norm=divnorm)
         c = ax.pcolor(data.meta.x/1000, data.meta.z/1000, inp.b * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
-
-        #sp = ax.streamplot(data.meta.x[::,::skip]/1000, data.meta.z[::,::skip]/1000, inp.u[::,::skip], inp.w[::,::skip], color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
-        
-        
-        # was unsing sp = ax.streamplot(data.meta.x/1000, data.meta.z/1000, inp.u, inp.w, color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
-        
-        
-        
+ 
         fig.colorbar(c, ax=ax)
-        #plt.title(f'{prefix}{data.meta.title(inp.t)}', pad=30)
+        
+        timeString = time.strftime('%H:%M:%S', time.gmtime(inp.t))
+        plt.title(f't = {timeString}')
         plt.show()
 
     def display_line(self, data, time, lineType = LineType.ALL, prefix=''):
