@@ -76,7 +76,12 @@ class animator():
                 plt.title(f't = {timeString}')
 
             fig.savefig(f'{path}/images/{prefix}/{index}.jpg', bbox_inches='tight', transparent=False, facecolor='white')
-            plt.close(fig)
+            # Clear the current axes.
+            plt.cla() 
+            # Clear the current figure.
+            plt.clf() 
+            # Closes all the figure windows.
+            plt.close('all')
             
             index += 1
 
