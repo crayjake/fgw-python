@@ -96,7 +96,7 @@ class Meta:
         self.dx = 100
         self.dz = 50
         #self.spacesteps = int(self.space / self.dx)
-        self.spacesteps = 1000
+        self.spacesteps = 1500
         self.dx = int(self.space / self.spacesteps)
         self.dz = int(self.D / self.spacesteps)
 
