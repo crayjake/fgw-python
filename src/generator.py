@@ -21,33 +21,29 @@ def CrankNicolsonDeep(meta: Meta, inp: DataSample, i: int) -> DataSample:
     B = meta.B_new[i]
     D1 = meta.D1
     D2 = meta.D2
+
     # parameters (for simpler code)
-    m = meta.js[i] * np.pi / meta.D
-    Q = meta.Qs[i]
     T = meta.Ts[i]
     L = meta.L
-    S = meta.S0 * Q * F(meta.x[0, :], L) * (H(T - (inp.t + meta.dt)) + H(T - inp.t)) / 2
     N = meta.N
     dt = meta.dt
-
-    n = meta.n
     f = meta.f
     al = meta.alpha
 
     # deep param
+    j = meta.js[i]
     h = 100000 # scale height
     rho_s = 1
     g = 10 # gravity
     N = 0.01
-    A_j = math.sqrt(2 / (rho_s * (N ** 2) * meta.D))
-    D_t = 10000
-    j = meta.js[i]
     D = meta.D
+    D_t = 10000
 
-    #sigmas = [0 * len(meta.js)]
-    #sigmas[0] = rho_s  * A_j * D_t / 2 # set j=5 mode to be nonzero
+    # modal variables
+    A_j = math.sqrt(2 / (rho_s * (N ** 2) * meta.D))
     c_jSquared = (((N * meta.D) ** 2) / (((meta.js[i] * np.pi) ** 2) + ((meta.D ** 2)/(4 * (h ** 2))))) # wavespeed
 
+    # calculating S_j
     if ((j * D_t / D) - 1) == 0:
         S_j = A_j * (rho_s / 2) * D_t
     else:
@@ -55,11 +51,10 @@ def CrankNicolsonDeep(meta: Meta, inp: DataSample, i: int) -> DataSample:
         S_B = np.sin((np.pi) * ((j * D_t / D) + 1)) / ((j * D_t / D) + 1)
         S_j = A_j * (rho_s / 2) * (D_t / np.pi) * (S_A - S_B)
 
-    S_j = S_j * F(meta.x[0, :], L) * meta.S0
+    S_j = S_j * F(meta.x[0, :], L) * meta.S0 * (H(T - (inp.t + meta.dt)) + H(T - inp.t)) / 2
 
     # step
     U = (B @ inp.u[i]) + (dt * f * inp.v[i]) - (dt * (D1 @ inp.p[i])) + ((dt ** 2) * (c_jSquared) * (D1 @ S_j) / 2)
-
     u = Ainv @ U
 
     v = inp.v[i] - (dt * f * (u + inp.u[i]) / 2)
@@ -70,27 +65,9 @@ def CrankNicolsonDeep(meta: Meta, inp: DataSample, i: int) -> DataSample:
 
     rho = ((1 / g) * (inp.p[i] + p)) - inp.rho[i] # -(1/g)(dp/dz)
 
-    #b = S_j
     b = -p - inp.p[i] - inp.b[i]
 
     return DataSample(b=b, u=u, v=v, w=w, p=p, rho=rho, t=inp.t + meta.dt)
-
-
-
-def EulerStep(meta: Meta, inp: DataSample, m: int, heat: int, heatTime: int) -> DataSample:
-    
-    # WARNING: not sure this is up to date
-    
-    mode = m * np.pi / meta.D
-   
-    u = inp.u + meta.dt * (-(np.matmul(meta.D1, inp.p)))
-    v = inp.v
-    # w = inp.w - (0.5/mode) * meta.dt * (np.matmul(meta.D1, inp.u + u))
-    w = - (np.matmul(meta.D1, inp.u) / mode)
-    b = inp.b + meta.dt * ((heat * F(meta.x[0, :], meta.L) * meta.H(heatTime - (inp.t + meta.dt))) - (meta.N * meta.N * inp.w))
-    p = - b / mode
-    
-    return DataSample(b=b, u=u, v=v, w=w, p=p, t=inp.t + meta.dt)
 
 def CrankNicolson(meta: Meta, inp: DataSample, i: int) -> DataSample:
     # matrices
@@ -127,6 +104,21 @@ def CrankNicolson(meta: Meta, inp: DataSample, i: int) -> DataSample:
     b = ((inp.b[i] * alphMinus) + (dt * (S - ((N ** 2) * (w + inp.w[i]) / 2)))) / alphPlus
 
     p = (((2 * n) / (dt)) * (w - inp.w[i])) - ((b + inp.b[i]) / m) - inp.p[i]
+    
+    return DataSample(b=b, u=u, v=v, w=w, p=p, t=inp.t + meta.dt)
+
+def EulerStep(meta: Meta, inp: DataSample, m: int, heat: int, heatTime: int) -> DataSample:
+    
+    # WARNING: not sure this is up to date
+    
+    mode = m * np.pi / meta.D
+   
+    u = inp.u + meta.dt * (-(np.matmul(meta.D1, inp.p)))
+    v = inp.v
+    # w = inp.w - (0.5/mode) * meta.dt * (np.matmul(meta.D1, inp.u + u))
+    w = - (np.matmul(meta.D1, inp.u) / mode)
+    b = inp.b + meta.dt * ((heat * F(meta.x[0, :], meta.L) * meta.H(heatTime - (inp.t + meta.dt))) - (meta.N * meta.N * inp.w))
+    p = - b / mode
     
     return DataSample(b=b, u=u, v=v, w=w, p=p, t=inp.t + meta.dt)
 #endregion
@@ -259,24 +251,22 @@ def convert(data: Data, contToken: DataSample = None):
         for i in range(len(meta.js)):
             c_jSquared = (((N * meta.D) ** 2) / (((meta.js[i] * np.pi) ** 2) + ((meta.D ** 2)/(4 * (h ** 2))))) # wavespeed
             for z in range(meta.x.shape[0]):
+                # phi like
                 w[z, :] += inp.w[i] * phi(z, meta.js[i], h, meta.D, meta.x.shape[0]-1, A_j)
+                rho[z, :] += inp.rho[i] * ((rhoZero(z, rho_s, h, meta.D, meta.x.shape[0]-1) * (N ** 2)) / (c_jSquared)) * phi(z, meta.js[i], h, meta.D, meta.x.shape[0]-1, A_j)
+                b[z, :] +=  inp.b[i] * ((N ** 2) / c_jSquared) * phi(z, meta.js[i], h, meta.D, meta.x.shape[0]-1, A_j)
+
+                # phi' like
                 u[z, :] += inp.u[i] * phiPrime(z, meta.js[i], h, meta.D, meta.x.shape[0]-1, A_j)
                 v[z, :] += inp.v[i] * phiPrime(z, meta.js[i], h, meta.D, meta.x.shape[0]-1, A_j)
-
-
-                b[z, :] +=  inp.b[i] * ((N ** 2) / c_jSquared) * phi(z, meta.js[i], h, meta.D, meta.x.shape[0]-1, A_j)
-                # Use b to show heating
-                #b[z, :] +=  inp.b[i] * (N ** 2) * phi(z, meta.js[i], h, meta.D, meta.x.shape[0]-1, A_j)
-
                 p[z, :] += inp.p[i] * rhoZero(z, rho_s, h, meta.D, meta.x.shape[0]-1) *  phiPrime(z, meta.js[i], h, meta.D, meta.x.shape[0]-1, A_j)
-                
-                rho[z, :] += inp.rho[i] * ((rhoZero(z, rho_s, h, meta.D, meta.x.shape[0]-1) * (N ** 2)) / (c_jSquared)) * phi(z, meta.js[i], h, meta.D, meta.x.shape[0]-1, A_j)
 
                 sample = DataSample(u=u, v=v, w=w, b=b, p=p, rho=rho, t=t)
         
 
         output.addSample(sample)
 
+        # Max RAM handling code
         #memory = round(python_process.memory_info()[0]/2.**30, 2)  # memory use in GB
         
         #if memory != previousMemory:
