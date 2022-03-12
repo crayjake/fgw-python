@@ -55,7 +55,8 @@ class animator():
             fig, ax = plt.subplots()
             
             if plotType == Plot.STREAM:
-                c = ax.pcolor(x, z, inp.b[::,::skip] * (273 / 10), cmap='plasma', shading='auto', zorder=0)#, norm=divnorm)
+                divnorm = colors.TwoSlopeNorm(vmin=-0.3, vcenter=0, vmax=0.3)
+                c = ax.pcolor(data.meta.x/1000, data.meta.z/1000, inp.b * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
                 sp = ax.streamplot(x, z, inp.u[::,::skip], inp.w[::,::skip], color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
 
                 fig.colorbar(c, ax=ax)
