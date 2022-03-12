@@ -43,10 +43,10 @@ class animator():
             prefix = 'line'
 
         if not os.path.exists(f'{path}/images'):
-            os.mkdir(f'{path}/images')
+            os.mkdirs(f'{path}/images')
         
         if not os.path.exists(f'{path}/images/{prefix}'):
-            os.mkdir(f'{path}/images/{prefix}')
+            os.mkdirs(f'{path}/images/{prefix}')
         
         x = data.meta.x[::,::skip]/1000
         z = data.meta.z[::,::skip]/1000
