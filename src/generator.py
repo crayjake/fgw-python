@@ -31,10 +31,10 @@ def CrankNicolsonDeepDamped(meta: Meta, inp: DataSample, i: int) -> DataSample:
     dt = meta.dt
     f = meta.f
 
-    def alpha(x):
+    def alpha(xs):
         al = meta.alpha
-        x -= meta.spacesteps / 2
-        return al * np.where(x > (3 * meta.space / 8), 1, 0)
+        x = np.copy(xs)
+        return al * np.where(x > (3 * meta.space / 8) or x < -(3 * meta.space / 8), 1, 0)
 
     # deep param
     j = meta.js[i]
