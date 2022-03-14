@@ -61,7 +61,7 @@ def CrankNicolsonDeepDamped(meta: Meta, inp: DataSample, i: int) -> DataSample:
     S_j = S_j * F(meta.x[0, :], L) * meta.S0 * (H(T - (inp.t + meta.dt)) + H(T - inp.t)) / 2
 
     # step
-    U = (B @ inp.u[i]) + (dt * f * inp.v[i] * (2 + (dt * alpha(meta.x[0, :])))) - (dt * (D1 @ (inp.p[i] * (2 + (dt * alpha(meta.x[0, :])))))) + ((dt ** 2) * (c_jSquared) * (D1 @ S_j) / 2)
+    U = (B @ inp.u[i]) + (dt * f * inp.v[i] * (2 + (dt * alpha(meta.x[0, :]))) / 2) - (dt * (D1 @ (inp.p[i] * (2 + (dt * alpha(meta.x[0, :]))) / 2))) + ((dt ** 2) * (c_jSquared) * (D1 @ S_j) / 2)
     u = Ainv @ U
 
     v = (inp.v[i] - (dt * f * (u + inp.u[i]) / 2)) / (1 + (dt * alpha(meta.x[0, :])))
