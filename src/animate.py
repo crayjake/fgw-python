@@ -76,7 +76,7 @@ class animator():
                 plt.title(f't = {timeString}')
 
             ax.get_xaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
-
+            ax.get_xaxis().set_minor_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
             fig.savefig(f'{path}/images/{prefix}/{index}.jpg', bbox_inches='tight', transparent=False, facecolor='white')
             # Clear the current axes.
             plt.cla() 
@@ -115,6 +115,7 @@ class animator():
         fig.colorbar(c, ax=ax)
 
         ax.get_xaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
+        ax.get_xaxis().set_minor_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
         timeString = time.strftime('%H:%M:%S', time.gmtime(inp.t))
         plt.title(f't = {timeString}')
         plt.show()
@@ -136,6 +137,7 @@ class animator():
             ax.plot(middleX(data.meta.x, sponge)[0,::skip], middleX(inp.p, sponge)[0][::skip]*10, f'g:')
 
         ax.get_xaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
+        ax.get_xaxis().set_minor_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
         plt.title(f'{prefix} at t = {inp.t}')
         plt.show()
 
