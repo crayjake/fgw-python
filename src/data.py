@@ -178,11 +178,21 @@ class Meta:
 
         h = 100000 # m - scale height
         A_bulk = np.array([(((self.f**2) * (self.dt ** 2) / 4) - ((((self.N * self.D) ** 2) / (((j * pi) ** 2) + ((self.D ** 2)/(4 * (h ** 2))))) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
-        
+
         self.A_new = np.array([eye + A for A in A_bulk])
         self.B_new = np.array([eye - A for A in A_bulk])
         self.Ainv_new = np.array([np.linalg.inv(A) for A in self.A_new], dtype='float64')
 
+
+        import math
+        self.spongeWidth = (self.space / 2) / 5 # 1 / 5 of the width (where width is x > 0)
+        self.c_max = math.sqrt(((self.N * self.D) ** 2) / (((pi) ** 2) + ((self.D ** 2)/(4 * (h ** 2)))))
+        self.alpha = 4 * (self.c_max / self.spongeWidth) # change 4 or 5
+
+        A_bulk_damped = np.array([(((self.f**2) * (self.dt ** 2) / 4) - ((((self.N * self.D) ** 2) / (((j * pi) ** 2) + ((self.D ** 2)/(4 * (h ** 2))))) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
+        self.A_damped = np.array([(eye * ((1 + (self.dt * self.alpha)) ** 2)) + A for A in A_bulk])
+        self.B_damped = np.array([(eye * (1 + (self.dt * self.alpha))) - A for A in A_bulk])
+        self.Ainv_damped = np.array([np.linalg.inv(A) for A in self.A_damped], dtype='float64')
 
 
     def __str__(self):

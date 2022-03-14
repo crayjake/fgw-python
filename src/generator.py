@@ -15,6 +15,62 @@ import os
 import math
 
 #region Simulation methods
+
+#region Simulation methods
+def CrankNicolsonDeepDamped(meta: Meta, inp: DataSample, i: int) -> DataSample:
+    # matrices
+    Ainv = meta.Ainv_damped[i]
+    B = meta.B_damped[i]
+    D1 = meta.D1
+    D2 = meta.D2
+
+    # parameters (for simpler code)
+    T = meta.Ts[i]
+    L = meta.L
+    N = meta.N
+    dt = meta.dt
+    f = meta.f
+    alpha = meta.alpha
+
+    # deep param
+    j = meta.js[i]
+    h = 100000 # scale height
+    rho_s = 1
+    g = 10 # gravity
+    N = 0.01
+    D = meta.D
+    D_t = 10000
+
+    # modal variables
+    A_j = math.sqrt(2 / (rho_s * (N ** 2) * meta.D))
+    c_jSquared = (((N * meta.D) ** 2) / (((meta.js[i] * np.pi) ** 2) + ((meta.D ** 2)/(4 * (h ** 2))))) # wavespeed
+
+    # calculating S_j
+    if ((j * D_t / D) - 1) == 0:
+        S_j = A_j * (rho_s / 2) * D_t
+    else:
+        S_A = np.sin((np.pi) * ((j * D_t / D) - 1)) / ((j * D_t / D) - 1)
+        S_B = np.sin((np.pi) * ((j * D_t / D) + 1)) / ((j * D_t / D) + 1)
+        S_j = A_j * (rho_s / 2) * (D_t / np.pi) * (S_A - S_B)
+
+    S_j = S_j * F(meta.x[0, :], L) * meta.S0 * (H(T - (inp.t + meta.dt)) + H(T - inp.t)) / 2
+
+    # step
+    U = (B @ inp.u[i]) + (dt * f * inp.v[i] * (2 + (dt * alpha))) - (dt * (D1 @ (inp.p[i] * (2 + (dt * alpha))))) + ((dt ** 2) * (c_jSquared) * (D1 @ S_j) / 2)
+    u = Ainv @ U
+
+    v = (inp.v[i] - (dt * f * (u + inp.u[i]) / 2)) / (1 + (dt * alpha))
+
+    w = (-1) * ((D1 @ (u + inp.u[i])) + inp.w[i])
+
+    p = (inp.p[i] + ((dt * c_jSquared) * (((w + inp.w[i]) / 2) - S_j))) / (1 + (dt * alpha))
+
+    rho = ((1 / g) * (inp.p[i] + p)) - inp.rho[i] # -(1/g)(dp/dz)
+
+    b = -p - inp.p[i] - inp.b[i]
+
+    return DataSample(b=b, u=u, v=v, w=w, p=p, rho=rho, t=inp.t + meta.dt)
+
 def CrankNicolsonDeep(meta: Meta, inp: DataSample, i: int) -> DataSample:
     # matrices
     Ainv = meta.Ainv_new[i]
