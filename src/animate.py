@@ -105,7 +105,8 @@ class animator():
         #c = ax.pcolor(data.meta.x[::,::skip]/1000, data.meta.z[::,::skip]/1000, inp.b[::,::skip] * (273 / 10), cmap=plt.get_cmap('bwr', 30), shading='auto', zorder=0, norm=divnorm)
         c = ax.pcolor(data.meta.x/1000, data.meta.z/1000, inp.b * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
  
-        sp = ax.streamplot(data.meta.x/1000, data.meta.z/1000, inp.u[::,::skip], inp.w[::,::skip], color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+
+        sp = ax.streamplot(data.meta.x/1000, data.meta.z/1000, inp.u, inp.w, color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
         
         #countour = ax.contou
 
