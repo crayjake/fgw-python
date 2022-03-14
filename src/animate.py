@@ -48,8 +48,8 @@ class animator():
         if not os.path.exists(f'{path}/images/{prefix}'):
             os.makedirs(f'{path}/images/{prefix}')
         
-        x = middleZ(data.meta.x[0], sponge)/1000
-        z = data.meta.z[::,0]/1000
+        x = middleZ(data.meta.X, sponge)/1000
+        z = data.meta.Z/1000
         index = int(data.data[0].t / data.meta.dt)
         for inp in tqdm(data.data):
             fig, ax = plt.subplots()
@@ -106,7 +106,7 @@ class animator():
         c = ax.pcolor(middleX(data.meta.x, sponge)/1000, middleX(data.meta.z, sponge)/1000, middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
  
         #skip = int(middleX(data.meta.x, sponge).shape[1]/200)
-        sp = ax.streamplot(middleZ(data.meta.x[0], sponge)/1000, data.meta.z[::,0]/1000, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k', arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+        sp = ax.streamplot(middleZ(data.meta.X, sponge)/1000, data.meta.Z/1000, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k', arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
         
         #countour = ax.contou
 
