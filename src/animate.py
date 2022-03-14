@@ -92,10 +92,10 @@ class animator():
         
         subprocess.run([f'echo Y | ffmpeg -framerate {framerate} -start_number 0 -i {input}/%d.jpg -vf "scale=-2:512" -pix_fmt yuv420p {file}'], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         
-    def display(self, data, time, prefix=''):
+    def display(self, data, t, prefix=''):
         skip = 1#math.ceil(data.meta.x.shape[1]/200)
         #print(f'SKIP: {math.ceil(data.meta.x.shape[1]/200)}')
-        inp = data.data[time]
+        inp = data.data[t]
         fig, ax = plt.subplots()
 
         #divnorm = colors.BoundaryNorm(np.linspace(-0.3, 0.3, 30), plt.get_cmap('bwr').N)
@@ -105,6 +105,10 @@ class animator():
         #c = ax.pcolor(data.meta.x[::,::skip]/1000, data.meta.z[::,::skip]/1000, inp.b[::,::skip] * (273 / 10), cmap=plt.get_cmap('bwr', 30), shading='auto', zorder=0, norm=divnorm)
         c = ax.pcolor(data.meta.x/1000, data.meta.z/1000, inp.b * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
  
+        sp = ax.streamplot(data.meta.x/1000, data.meta.z/1000, inp.u[::,::skip], inp.w[::,::skip], color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+        
+        #countour = ax.contou
+
         fig.colorbar(c, ax=ax)
         
         timeString = time.strftime('%H:%M:%S', time.gmtime(inp.t))
