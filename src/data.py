@@ -116,30 +116,6 @@ class Meta:
     def generateMatrices(self):
         # make differentiation matrices D1 and D2
         print(f'Creating matrices...')
-        #self.D1 = np.zeros((self.spacesteps, self.spacesteps), dtype='float32')
-        #self.D2 = np.zeros((self.spacesteps, self.spacesteps), dtype='float32')
-
-        #self.D1[0,  1] =  1
-        #self.D1[0, -1] = -1
-        #self.D2[0,  0] = -2
-        #self.D2[0,  1] =  1
-        #self.D2[0, -1] =  1
-
-        #cx=1
-        #while cx < self.spacesteps - 1:
-        #    self.D1[cx, cx-1] = -1
-        #    self.D1[cx, cx+1] =  1
-        #    self.D2[cx, cx-1] =  1
-        #    self.D2[cx, cx]   = -2
-        #    self.D2[cx, cx+1] =  1
-        #    cx = cx + 1
-
-        #self.D1[self.spacesteps-1, self.spacesteps-2] = -1
-        #self.D1[self.spacesteps-1, 0]                 =  1
-        #self.D2[self.spacesteps-1, self.spacesteps-2] =  1
-        #self.D2[self.spacesteps-1, self.spacesteps-1] = -2
-        #self.D2[self.spacesteps-1, 0]                 =  1
-
         spacesteps = self.spacesteps
         D1 = np.zeros((spacesteps, spacesteps), dtype='float64')
         D2 = np.zeros((spacesteps, spacesteps), dtype='float64')
@@ -168,7 +144,7 @@ class Meta:
 
         h = 100000 # m - scale height
         A_bulk = np.array([(((self.f**2) * (self.dt ** 2) / 4) - ((((self.N * self.D) ** 2) / (((j * pi) ** 2) + ((self.D ** 2)/(4 * (h ** 2))))) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
-        self.A_bulk = A_bulk
+    
         #self.A_new = np.array([eye + A for A in A_bulk])
         #self.B_new = np.array([eye - A for A in A_bulk])
         #self.Ainv_new = np.array([np.linalg.inv(A) for A in self.A_new], dtype='float64')
@@ -182,22 +158,26 @@ class Meta:
         #self.A_damped = np.array([(eye * ((1 + (self.dt * self.alpha)) ** 2)) + A for A in A_bulk])
         #self.B_damped = np.array([(eye * (1 + (self.dt * self.alpha))) - A for A in A_bulk])
         #self.Ainv_damped = np.array([np.linalg.inv(A) for A in self.A_damped], dtype='float64')
+        
+        self.A_damped = np.array([np.eye(self.spacesteps)] * len(A_bulk))
+        self.B_damped = np.array([np.eye(self.spacesteps)] * len(A_bulk))
 
-    
-    def alphaX(self, x):
-        return np.less(np.abs(x), self.space/2) * np.greater(np.abs(x), 3 * (self.space/2) / 4) * self.alpha * (np.abs(x) - (3 * (self.space/2) / 4)) / (self.space / 2)
+        for a_index in range(len(A_bulk)):
+            for i in range(self.spacesteps):
+                x = i - (self.spacesteps / 2)
+                self.A_damped[a_index][i][i] *= (1 + (self.dt * self.alphaX(x, self.spacesteps / 2))) ** 2
+                self.B_damped[a_index][i][i] *= (1 + (self.dt * self.alphaX(x, self.spacesteps / 2)))
+            
+        self.Ainv_damped = np.array([np.linalg.inv(A) for A in self.A_damped], dtype='float64')
 
-    def A_damped(self, x):
-        aX = self.alphaX(x)
-        return np.array([(np.identity(self.spacesteps) * ((1 + (self.dt * aX)) ** 2)) + A for A in self.A_bulk])
 
-    def B_damped(self, x):
-        aX = self.alphaX(x)
-        return np.array([(np.identity(self.spacesteps) * (1 + (self.dt * aX))) - A for A in self.A_bulk])
+    def alphaX(self, x, width):
+        if 3 * (width) / 4 < abs(x) < width:
+            # then a ramps up
+            return self.alpha * (abs(x) - (3 * (width) / 4)) / (width)
+        else:
+            return 0
 
-    def Ainv_damped(self, x):
-        h = 100000
-        return np.array([np.linalg.inv(A) for A in self.A_damped(x)], dtype='float64')
 
 
     def __str__(self):

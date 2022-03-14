@@ -19,8 +19,8 @@ import math
 #region Simulation methods
 def CrankNicolsonDeepDamped(meta: Meta, inp: DataSample, i: int) -> DataSample:
     # matrices
-    Ainv = meta.Ainv_damped(meta.x[0, :])[i]
-    B = meta.B_damped(meta.x[0, :])[i]
+    Ainv = meta.Ainv_damped[i]
+    B = meta.B_damped[i]
     D1 = meta.D1
     D2 = meta.D2
 
@@ -30,7 +30,11 @@ def CrankNicolsonDeepDamped(meta: Meta, inp: DataSample, i: int) -> DataSample:
     N = meta.N
     dt = meta.dt
     f = meta.f
-    alpha = meta.alpha
+
+    def alpha(x):
+        al = meta.alpha
+        x -= meta.spacesteps / 2
+        return al * np.where(x > (3 * meta.space / 8), 1, 0)
 
     # deep param
     j = meta.js[i]
@@ -56,14 +60,14 @@ def CrankNicolsonDeepDamped(meta: Meta, inp: DataSample, i: int) -> DataSample:
     S_j = S_j * F(meta.x[0, :], L) * meta.S0 * (H(T - (inp.t + meta.dt)) + H(T - inp.t)) / 2
 
     # step
-    U = (B @ inp.u[i]) + (dt * f * inp.v[i] * (2 + (dt * alpha))) - (dt * (D1 @ (inp.p[i] * (2 + (dt * alpha))))) + ((dt ** 2) * (c_jSquared) * (D1 @ S_j) / 2)
+    U = (B @ inp.u[i]) + (dt * f * inp.v[i] * (2 + (dt * alpha(meta.x[0, :])))) - (dt * (D1 @ (inp.p[i] * (2 + (dt * alpha(meta.x[0, :])))))) + ((dt ** 2) * (c_jSquared) * (D1 @ S_j) / 2)
     u = Ainv @ U
 
-    v = (inp.v[i] - (dt * f * (u + inp.u[i]) / 2)) / (1 + (dt * alpha))
+    v = (inp.v[i] - (dt * f * (u + inp.u[i]) / 2)) / (1 + (dt * alpha(meta.x[0, :])))
 
     w = (-1) * ((D1 @ (u + inp.u[i])) + inp.w[i])
 
-    p = (inp.p[i] + ((dt * c_jSquared) * (((w + inp.w[i]) / 2) - S_j))) / (1 + (dt * alpha))
+    p = (inp.p[i] + ((dt * c_jSquared) * (((w + inp.w[i]) / 2) - S_j))) / (1 + (dt * alpha(meta.x[0, :])))
 
     rho = ((1 / g) * (inp.p[i] + p)) - inp.rho[i] # -(1/g)(dp/dz)
 
