@@ -48,8 +48,8 @@ class animator():
         if not os.path.exists(f'{path}/images/{prefix}'):
             os.makedirs(f'{path}/images/{prefix}')
         
-        x = middleX(data.meta.x, sponge)[::,::skip]/1000
-        z = middleX(data.meta.z, sponge)[::,::skip]/1000
+        x = middleX(data.meta.x, sponge)/1000
+        z = middleX(data.meta.z, sponge)/1000
         index = int(data.data[0].t / data.meta.dt)
         for inp in tqdm(data.data):
             fig, ax = plt.subplots()
@@ -57,7 +57,7 @@ class animator():
             if plotType == Plot.STREAM:
                 divnorm = colors.TwoSlopeNorm(vmin=-0.3, vcenter=0, vmax=0.3)
                 c = ax.pcolor(middleX(data.meta.x, sponge)/1000, middleX(data.meta.z, sponge)/1000, middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
-                sp = ax.streamplot(x, z, middleX(inp.u, sponge)[::,::skip], middleX(inp.w, sponge)[::,::skip], color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+                sp = ax.streamplot(x, z, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
 
                 fig.colorbar(c, ax=ax)
 
@@ -105,8 +105,8 @@ class animator():
         #c = ax.pcolor(data.meta.x[::,::skip]/1000, data.meta.z[::,::skip]/1000, inp.b[::,::skip] * (273 / 10), cmap=plt.get_cmap('bwr', 30), shading='auto', zorder=0, norm=divnorm)
         c = ax.pcolor(middleX(data.meta.x, sponge)/1000, middleX(data.meta.z, sponge)/1000, middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
  
-        skip = int(middleX(data.meta.x, sponge).shape[1]/200)
-        sp = ax.streamplot(middleX(data.meta.x, sponge)[::,::skip]/1000, middleX(data.meta.z, sponge)[::,::skip]/1000, middleX(inp.u, sponge)[::,::skip], middleX(inp.w, sponge)[::,::skip], color='k', arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+        #skip = int(middleX(data.meta.x, sponge).shape[1]/200)
+        sp = ax.streamplot(middleX(data.meta.x, sponge)/1000, middleX(data.meta.z, sponge)/1000, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k', arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
         
         #countour = ax.contou
 
@@ -122,13 +122,13 @@ class animator():
         fig, ax = plt.subplots()
 
         if lineType == LineType.U or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.u, sponge)[0][::skip], f'b{"--" if lineType == LineType.ALL else ""}')
+            ax.plot(middleX(data.meta.x, sponge)[0]/1000, middleX(inp.u, sponge)[0], f'b{"--" if lineType == LineType.ALL else ""}')
         if lineType == LineType.V or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.v, sponge)[0][::skip], f'p{"--" if lineType == LineType.ALL else ""}')
+            ax.plot(middleX(data.meta.x, sponge)[0]/1000, middleX(inp.v, sponge)[0], f'p{"--" if lineType == LineType.ALL else ""}')
         if lineType == LineType.W or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.w, sponge)[0][::skip]*10, f'r{"-" if lineType == LineType.ALL else ""}')
+            ax.plot(middleX(data.meta.x, sponge)[0]/1000, middleX(inp.w, sponge)[0]*10, f'r{"-" if lineType == LineType.ALL else ""}')
         if lineType == LineType.B or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.b, sponge)[0][::skip]*10, f'k{":" if lineType == LineType.ALL else ""}')
+            ax.plot(middleX(data.meta.x, sponge)[0]/1000, middleX(inp.b, sponge)[0]*10, f'k{":" if lineType == LineType.ALL else ""}')
         if lineType == LineType.P or lineType == LineType.ALL:
             ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.p, sponge)[0][::skip]*10, f'g:')
         plt.title(f'{prefix} at t = {inp.t}')
