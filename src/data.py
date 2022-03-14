@@ -174,7 +174,7 @@ class Meta:
     def alphaX(self, x, width):
         if 3 * (width) / 4 < abs(x) < width:
             # then a ramps up
-            return self.alpha * (abs(x) - (3 * (width) / 4)) / (width)
+            return 4 * self.alpha * (abs(x) - (3 * (width) / 4)) / (width)
         else:
             return 0
 
