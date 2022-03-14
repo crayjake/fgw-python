@@ -178,6 +178,7 @@ class Meta:
 
         h = 100000 # m - scale height
         A_bulk = np.array([(((self.f**2) * (self.dt ** 2) / 4) - ((((self.N * self.D) ** 2) / (((j * pi) ** 2) + ((self.D ** 2)/(4 * (h ** 2))))) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
+        
         self.A_new = np.array([eye + A for A in A_bulk])
         self.B_new = np.array([eye - A for A in A_bulk])
         self.Ainv_new = np.array([np.linalg.inv(A) for A in self.A_new], dtype='float64')
