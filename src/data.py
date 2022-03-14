@@ -102,7 +102,7 @@ class Meta:
 
         self.timesteps = ceil(self.time / self.dt)
 
-        self.X = np.linspace(-self.space / 2, self.space / 2, self.spacesteps, endpoint=True, dtype='float32')
+        self.X = np.linspace(-self.space / 2, self.space / 2, self.spacesteps, endpoint=False, dtype='float32')
         #self.X = np.linspace(0, self.space, self.spacesteps, endpoint=False, dtype='float64')
         self.Z = np.linspace(0, self.D, self.spacesteps, endpoint=True, dtype='float64')
         self.x, self.z = np.meshgrid(self.X, self.Z)
