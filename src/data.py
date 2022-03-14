@@ -151,7 +151,7 @@ class Meta:
 
 
         import math
-        self.spongeWidth = (self.space / 2) / 5 # 1 / 5 of the width (where width is x > 0)
+        self.spongeWidth = (self.space / 2) / 4 # 1 / 5 of the width (where width is x > 0)
         self.c_max = math.sqrt(((self.N * self.D) ** 2) / (((pi) ** 2) + ((self.D ** 2)/(4 * (h ** 2)))))
         self.alpha = 4 * (self.c_max / self.spongeWidth) # change 4 or 5
 
