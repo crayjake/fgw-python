@@ -34,7 +34,7 @@ class LineType(Enum):
 
 class animator():
 
-    def images(self, data: Data, path, title:bool = False, plotType:Plot = Plot.STREAM, lineType:LineType = None):
+    def images(self, data: Data, path, title:bool = False, plotType:Plot = Plot.STREAM, lineType:LineType = None, sponge=True):
         skip = int(data.meta.x.shape[1]/200)
         prefix = ''
         if plotType == Plot.STREAM:
@@ -48,28 +48,28 @@ class animator():
         if not os.path.exists(f'{path}/images/{prefix}'):
             os.makedirs(f'{path}/images/{prefix}')
         
-        x = middleX(data.meta.x)[::,::skip]/1000
-        z = middleX(data.meta.z)[::,::skip]/1000
+        x = middleX(data.meta.x, sponge)[::,::skip]/1000
+        z = middleX(data.meta.z, sponge)[::,::skip]/1000
         index = int(data.data[0].t / data.meta.dt)
         for inp in tqdm(data.data):
             fig, ax = plt.subplots()
             
             if plotType == Plot.STREAM:
                 divnorm = colors.TwoSlopeNorm(vmin=-0.3, vcenter=0, vmax=0.3)
-                c = ax.pcolor(middleX(data.meta.x)/1000, middleX(data.meta.z)/1000, middleX(inp.b) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
-                sp = ax.streamplot(x, z, middleX(inp.u)[::,::skip], middleX(inp.w)[::,::skip], color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+                c = ax.pcolor(middleX(data.meta.x, sponge)/1000, middleX(data.meta.z, sponge)/1000, middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
+                sp = ax.streamplot(x, z, middleX(inp.u, sponge)[::,::skip], middleX(inp.w, sponge)[::,::skip], color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
 
                 fig.colorbar(c, ax=ax)
 
             elif plotType == Plot.LINE:
                 if lineType == LineType.U or lineType == LineType.ALL:
-                    ax.plot(data.meta.x[0,::skip]/1000, inp.u[0][::skip], f'k{"--" if lineType == LineType.ALL else ""}')
+                    ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.u, sponge)[0][::skip], f'k{"--" if lineType == LineType.ALL else ""}')
                 if lineType == LineType.W or lineType == LineType.ALL:
-                    ax.plot(data.meta.x[0,::skip]/1000, inp.w[0][::skip]*10, f'k{"-" if lineType == LineType.ALL else ""}')
+                    ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.w, sponge)[0][::skip]*10, f'k{"-" if lineType == LineType.ALL else ""}')
                 if lineType == LineType.B or lineType == LineType.ALL:
-                    ax.plot(data.meta.x[0,::skip]/1000, inp.b[0][::skip] * (273 / 10), f'k{":" if lineType == LineType.ALL else ""}')
+                    ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.b, sponge)[0][::skip] * (273 / 10), f'k{":" if lineType == LineType.ALL else ""}')
                 if lineType == LineType.P:
-                    ax.plot(data.meta.x[0,::skip]/1000, inp.p[0][::skip]*10, f'k')
+                    ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.p, sponge)[0][::skip]*10, f'k')
 
             if title:        
                 timeString = time.strftime('%H:%M:%S', time.gmtime(inp.t))
@@ -92,7 +92,7 @@ class animator():
         
         subprocess.run([f'echo Y | ffmpeg -framerate {framerate} -start_number 0 -i {input}/%d.jpg -vf "scale=-2:512" -pix_fmt yuv420p {file}'], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         
-    def display(self, data, t, prefix=''):
+    def display(self, data, t, prefix='', sponge=True):
         skip = 1#math.ceil(data.meta.x.shape[1]/200)
         #print(f'SKIP: {math.ceil(data.meta.x.shape[1]/200)}')
         inp = data.data[t]
@@ -103,10 +103,10 @@ class animator():
         #divnorm=colors.TwoSlopeNorm(vcenter=0)
 
         #c = ax.pcolor(data.meta.x[::,::skip]/1000, data.meta.z[::,::skip]/1000, inp.b[::,::skip] * (273 / 10), cmap=plt.get_cmap('bwr', 30), shading='auto', zorder=0, norm=divnorm)
-        c = ax.pcolor(middleX(data.meta.x)/1000, middleX(data.meta.z)/1000, middleX(inp.b) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
+        c = ax.pcolor(middleX(data.meta.x, sponge)/1000, middleX(data.meta.z, sponge)/1000, middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
  
-        skip = int(middleX(data.meta.x).shape[1]/200)
-        sp = ax.streamplot(middleX(data.meta.x)[::,::skip]/1000, middleX(data.meta.z)[::,::skip]/1000, middleX(inp.u)[::,::skip], middleX(inp.w)[::,::skip], color='k', arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+        skip = int(middleX(data.meta.x, sponge).shape[1]/200)
+        sp = ax.streamplot(middleX(data.meta.x, sponge)[::,::skip]/1000, middleX(data.meta.z, sponge)[::,::skip]/1000, middleX(inp.u, sponge)[::,::skip], middleX(inp.w, sponge)[::,::skip], color='k', arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
         
         #countour = ax.contou
 
@@ -116,28 +116,32 @@ class animator():
         plt.title(f't = {timeString}')
         plt.show()
 
-    def display_line(self, data, time, lineType = LineType.ALL, prefix=''):
+    def display_line(self, data, time, lineType = LineType.ALL, prefix='', sponge=True):
         skip = math.ceil(middleX(data.meta.x).shape[1]/200)
         inp = data.data[time]
         fig, ax = plt.subplots()
 
         if lineType == LineType.U or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x)[0,::skip]/1000, middleX(inp.u)[0][::skip], f'b{"--" if lineType == LineType.ALL else ""}')
+            ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.u, sponge)[0][::skip], f'b{"--" if lineType == LineType.ALL else ""}')
         if lineType == LineType.V or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x)[0,::skip]/1000, middleX(inp.v)[0][::skip], f'p{"--" if lineType == LineType.ALL else ""}')
+            ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.v, sponge)[0][::skip], f'p{"--" if lineType == LineType.ALL else ""}')
         if lineType == LineType.W or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x)[0,::skip]/1000, middleX(inp.w)[0][::skip]*10, f'r{"-" if lineType == LineType.ALL else ""}')
+            ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.w, sponge)[0][::skip]*10, f'r{"-" if lineType == LineType.ALL else ""}')
         if lineType == LineType.B or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x)[0,::skip]/1000, middleX(inp.b)[0][::skip]*10, f'k{":" if lineType == LineType.ALL else ""}')
+            ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.b, sponge)[0][::skip]*10, f'k{":" if lineType == LineType.ALL else ""}')
         if lineType == LineType.P or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x)[0,::skip]/1000, middleX(inp.p)[0][::skip]*10, f'g:')
+            ax.plot(middleX(data.meta.x, sponge)[0,::skip]/1000, middleX(inp.p, sponge)[0][::skip]*10, f'g:')
         plt.title(f'{prefix} at t = {inp.t}')
         plt.show()
 
 # gets middle 3/4 of list (2nd dim)
-def middleX(arr):
-  return arr[::,int(len(arr)/8):][::,:-int(len(arr)/8)]
+def middleX(arr, sponge):
+    if not sponge:
+        return arr        
+    return arr[::,math.ceil(len(arr)/8):][::,:-math.ceil(len(arr)/8)]
 
 # gets middle 3/4 of list (1st dim)
-def middleZ(arr):
-  return arr[int(len(arr)/8):][:-int(len(arr)/8)]
+def middleZ(arr, sponge):
+    if not sponge:
+        return arr
+    return arr[math.ceil(len(arr)/8):][:-math.ceil(len(arr)/8)]
