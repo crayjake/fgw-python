@@ -49,14 +49,14 @@ class animator():
             os.makedirs(f'{path}/images/{prefix}')
         
         x = middleX(data.meta.x, sponge)/1000
-        z = middleX(data.meta.z, sponge)/1000
+        z = data.meta.z/1000
         index = int(data.data[0].t / data.meta.dt)
         for inp in tqdm(data.data):
             fig, ax = plt.subplots()
             
             if plotType == Plot.STREAM:
                 divnorm = colors.TwoSlopeNorm(vmin=-0.3, vcenter=0, vmax=0.3)
-                c = ax.pcolor(middleX(data.meta.x, sponge)/1000, middleX(data.meta.z, sponge)/1000, middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
+                c = ax.pcolor(middleX(data.meta.x, sponge)/1000, data.meta.z/1000, middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
                 sp = ax.streamplot(x, z, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
 
                 fig.colorbar(c, ax=ax)
@@ -103,10 +103,10 @@ class animator():
         #divnorm=colors.TwoSlopeNorm(vcenter=0)
 
         #c = ax.pcolor(data.meta.x[::,::skip]/1000, data.meta.z[::,::skip]/1000, inp.b[::,::skip] * (273 / 10), cmap=plt.get_cmap('bwr', 30), shading='auto', zorder=0, norm=divnorm)
-        c = ax.pcolor(middleX(data.meta.x, sponge)/1000, middleX(data.meta.z, sponge)/1000, middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
+        c = ax.pcolor(middleX(data.meta.x, sponge)/1000, data.meta.z/1000, middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
  
         #skip = int(middleX(data.meta.x, sponge).shape[1]/200)
-        sp = ax.streamplot(middleX(data.meta.x, sponge)/1000, middleX(data.meta.z, sponge)/1000, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k', arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+        sp = ax.streamplot(middleX(data.meta.x, sponge)/1000, data.meta.z/1000, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k', arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
         
         #countour = ax.contou
 
