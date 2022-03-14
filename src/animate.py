@@ -48,16 +48,16 @@ class animator():
         if not os.path.exists(f'{path}/images/{prefix}'):
             os.makedirs(f'{path}/images/{prefix}')
         
-        x = data.meta.x[::,::skip]/1000
-        z = data.meta.z[::,::skip]/1000
+        x = middleX(data.meta.x)[::,::skip]/1000
+        z = middleX(data.meta.z)[::,::skip]/1000
         index = int(data.data[0].t / data.meta.dt)
         for inp in tqdm(data.data):
             fig, ax = plt.subplots()
             
             if plotType == Plot.STREAM:
                 divnorm = colors.TwoSlopeNorm(vmin=-0.3, vcenter=0, vmax=0.3)
-                c = ax.pcolor(data.meta.x/1000, data.meta.z/1000, inp.b * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
-                sp = ax.streamplot(x, z, inp.u[::,::skip], inp.w[::,::skip], color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+                c = ax.pcolor(middleX(data.meta.x)/1000, middleX(data.meta.z)/1000, middleX(inp.b) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
+                sp = ax.streamplot(x, z, middleX(inp.u)[::,::skip], middleX(inp.w)[::,::skip], color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
 
                 fig.colorbar(c, ax=ax)
 
@@ -103,10 +103,10 @@ class animator():
         #divnorm=colors.TwoSlopeNorm(vcenter=0)
 
         #c = ax.pcolor(data.meta.x[::,::skip]/1000, data.meta.z[::,::skip]/1000, inp.b[::,::skip] * (273 / 10), cmap=plt.get_cmap('bwr', 30), shading='auto', zorder=0, norm=divnorm)
-        c = ax.pcolor(data.meta.x/1000, data.meta.z/1000, inp.b * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
+        c = ax.pcolor(middleX(data.meta.x)/1000, middleX(data.meta.z)/1000, middleX(inp.b) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
  
-        skip = int(data.meta.x.shape[1]/200)
-        sp = ax.streamplot(data.meta.x[::,::skip]/1000, data.meta.z[::,::skip]/1000, inp.u[::,::skip], inp.w[::,::skip], color='k', arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+        skip = int(middleX(data.meta.x).shape[1]/200)
+        sp = ax.streamplot(middleX(data.meta.x)[::,::skip]/1000, middleX(data.meta.z)[::,::skip]/1000, middleX(inp.u)[::,::skip], middleX(inp.w)[::,::skip], color='k', arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
         
         #countour = ax.contou
 
@@ -117,19 +117,27 @@ class animator():
         plt.show()
 
     def display_line(self, data, time, lineType = LineType.ALL, prefix=''):
-        skip = math.ceil(data.meta.x.shape[1]/200)
+        skip = math.ceil(middleX(data.meta.x).shape[1]/200)
         inp = data.data[time]
         fig, ax = plt.subplots()
 
         if lineType == LineType.U or lineType == LineType.ALL:
-            ax.plot(data.meta.x[0,::skip]/1000, inp.u[0][::skip], f'b{"--" if lineType == LineType.ALL else ""}')
+            ax.plot(middleX(data.meta.x)[0,::skip]/1000, middleX(inp.u)[0][::skip], f'b{"--" if lineType == LineType.ALL else ""}')
         if lineType == LineType.V or lineType == LineType.ALL:
-            ax.plot(data.meta.x[0,::skip]/1000, inp.v[0][::skip], f'p{"--" if lineType == LineType.ALL else ""}')
+            ax.plot(middleX(data.meta.x)[0,::skip]/1000, middleX(inp.v)[0][::skip], f'p{"--" if lineType == LineType.ALL else ""}')
         if lineType == LineType.W or lineType == LineType.ALL:
-            ax.plot(data.meta.x[0,::skip]/1000, inp.w[0][::skip]*10, f'r{"-" if lineType == LineType.ALL else ""}')
+            ax.plot(middleX(data.meta.x)[0,::skip]/1000, middleX(inp.w)[0][::skip]*10, f'r{"-" if lineType == LineType.ALL else ""}')
         if lineType == LineType.B or lineType == LineType.ALL:
-            ax.plot(data.meta.x[0,::skip]/1000, inp.b[0][::skip]*10, f'k{":" if lineType == LineType.ALL else ""}')
+            ax.plot(middleX(data.meta.x)[0,::skip]/1000, middleX(inp.b)[0][::skip]*10, f'k{":" if lineType == LineType.ALL else ""}')
         if lineType == LineType.P or lineType == LineType.ALL:
-            ax.plot(data.meta.x[0,::skip]/1000, inp.p[0][::skip]*10, f'g:')
+            ax.plot(middleX(data.meta.x)[0,::skip]/1000, middleX(inp.p)[0][::skip]*10, f'g:')
         plt.title(f'{prefix} at t = {inp.t}')
         plt.show()
+
+# gets middle 3/4 of list (2nd dim)
+def middleX(arr):
+  return arr[::,int(len(arr)/8):][::,:-int(len(arr)/8)]
+
+# gets middle 3/4 of list (1st dim)
+def middleZ(arr):
+  return arr[int(len(arr)/8):][:-int(len(arr)/8)]
