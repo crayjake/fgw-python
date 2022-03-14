@@ -193,7 +193,7 @@ class Meta:
 
     def B_damped(self, x):
         aX = self.alphaX(x)
-        np.array([(np.identity(self.spacesteps) * (1 + (self.dt * aX))) - A for A in self.A_bulk])
+        return np.array([(np.identity(self.spacesteps) * (1 + (self.dt * aX))) - A for A in self.A_bulk])
 
     def Ainv_damped(self, x):
         h = 100000
