@@ -19,8 +19,8 @@ import math
 #region Simulation methods
 def CrankNicolsonDeepDamped(meta: Meta, inp: DataSample, i: int) -> DataSample:
     # matrices
-    Ainv = meta.Ainv_damped[i]
-    B = meta.B_damped[i]
+    Ainv = meta.Ainv_damped(meta.x[0, :])[i]
+    B = meta.B_damped(meta.x[0, :])[i]
     D1 = meta.D1
     D2 = meta.D2
 

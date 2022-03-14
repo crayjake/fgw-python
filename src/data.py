@@ -102,7 +102,7 @@ class Meta:
 
         self.timesteps = ceil(self.time / self.dt)
 
-        self.X = np.linspace(-self.space / 2, self.space / 2, self.spacesteps, endpoint=False, dtype='float32')
+        self.X = np.linspace(-self.space / 2, self.space / 2, self.spacesteps, endpoint=True, dtype='float32')
         #self.X = np.linspace(0, self.space, self.spacesteps, endpoint=False, dtype='float64')
         self.Z = np.linspace(0, self.D, self.spacesteps, endpoint=True, dtype='float64')
         self.x, self.z = np.meshgrid(self.X, self.Z)
@@ -166,22 +166,12 @@ class Meta:
         self.D1 = self.D1.astype('float64')
         self.D2 = self.D2.astype('float64')
 
-        #self.A_u = np.array([np.eye(self.spacesteps, dtype='float32') - (((self.N ** 2) * (self.dt ** 2) / (4 * ((j * np.pi / self.D) ** 2))) * self.D2) for j in self.js])
-        #self.B_u = np.array([np.eye(self.spacesteps, dtype='float32') + (((self.N ** 2) * (self.dt ** 2) / (4 * ((j * np.pi / self.D) ** 2))) * self.D2) for j in self.js])
-        #self.Ainv_u = np.array([np.linalg.inv(A) for A in self.A_u], dtype='float32')
-
-        #Aparam = np.array([((self.dt**2)*(self.f**2)/(4)) - ((self.n/((j * np.pi / self.D)**2))*self.D2) - (((self.N ** 2) * (self.dt ** 2) / (4 * ((j * np.pi / self.D) ** 2) * (1 + (self.alpha * self.dt / 2)))) * self.D2) for j in self.js])
-        #self.A_uNEW = np.array([np.eye(self.spacesteps, dtype='float32') + A for A in Aparam], dtype='float32')
-        #self.B_uNEW = np.array([np.eye(self.spacesteps, dtype='float32') - A for A in Aparam], dtype='float32')
-        #self.Ainv_uNEW = np.array([np.linalg.inv(A) for A in self.A_uNEW])
-
-
         h = 100000 # m - scale height
         A_bulk = np.array([(((self.f**2) * (self.dt ** 2) / 4) - ((((self.N * self.D) ** 2) / (((j * pi) ** 2) + ((self.D ** 2)/(4 * (h ** 2))))) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
-
-        self.A_new = np.array([eye + A for A in A_bulk])
-        self.B_new = np.array([eye - A for A in A_bulk])
-        self.Ainv_new = np.array([np.linalg.inv(A) for A in self.A_new], dtype='float64')
+        self.A_bulk = A_bulk
+        #self.A_new = np.array([eye + A for A in A_bulk])
+        #self.B_new = np.array([eye - A for A in A_bulk])
+        #self.Ainv_new = np.array([np.linalg.inv(A) for A in self.A_new], dtype='float64')
 
 
         import math
@@ -189,10 +179,25 @@ class Meta:
         self.c_max = math.sqrt(((self.N * self.D) ** 2) / (((pi) ** 2) + ((self.D ** 2)/(4 * (h ** 2)))))
         self.alpha = 4 * (self.c_max / self.spongeWidth) # change 4 or 5
 
-        A_bulk_damped = np.array([(((self.f**2) * (self.dt ** 2) / 4) - ((((self.N * self.D) ** 2) / (((j * pi) ** 2) + ((self.D ** 2)/(4 * (h ** 2))))) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
-        self.A_damped = np.array([(eye * ((1 + (self.dt * self.alpha)) ** 2)) + A for A in A_bulk])
-        self.B_damped = np.array([(eye * (1 + (self.dt * self.alpha))) - A for A in A_bulk])
-        self.Ainv_damped = np.array([np.linalg.inv(A) for A in self.A_damped], dtype='float64')
+        #self.A_damped = np.array([(eye * ((1 + (self.dt * self.alpha)) ** 2)) + A for A in A_bulk])
+        #self.B_damped = np.array([(eye * (1 + (self.dt * self.alpha))) - A for A in A_bulk])
+        #self.Ainv_damped = np.array([np.linalg.inv(A) for A in self.A_damped], dtype='float64')
+
+    
+    def alphaX(self, x):
+        return np.less(np.abs(x), self.space/2) * np.greater(np.abs(x), 3 * (self.space/2) / 4) * self.alpha * (np.abs(x) - (3 * (self.space/2) / 4)) / (self.space / 2)
+
+    def A_damped(self, x):
+        aX = self.alphaX(x)
+        return np.array([(np.identity(self.spacesteps) * ((1 + (self.dt * aX)) ** 2)) + A for A in self.A_bulk])
+
+    def B_damped(self, x):
+        aX = self.alphaX(x)
+        np.array([(np.identity(self.spacesteps) * (1 + (self.dt * aX))) - A for A in self.A_bulk])
+
+    def Ainv_damped(self, x):
+        h = 100000
+        return np.array([np.linalg.inv(A) for A in self.A_damped(x)], dtype='float64')
 
 
     def __str__(self):
