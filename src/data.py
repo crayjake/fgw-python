@@ -168,14 +168,18 @@ class Meta:
                 self.A_damped[a_index][i][i] *= (1 + (self.dt * self.alphaX(x, self.spacesteps / 2))) ** 2
                 self.B_damped[a_index][i][i] *= (1 + (self.dt * self.alphaX(x, self.spacesteps / 2)))
             
+            self.A_damped[a_index] += A_bulk[a_index]
+            self.B_damped[a_index] -= A_bulk[a_index]
+
+
         self.Ainv_damped = np.array([np.linalg.inv(A) for A in self.A_damped], dtype='float64')
 
 
     def alphaX(self, x, width):
         if 3 * (width) / 4 < abs(x) < width:
             # then a ramps up
-            #return 4 * self.alpha * (abs(x) - (3 * (width) / 4)) / (width)
-            return 0
+            return 4 * self.alpha * (abs(x) - (3 * (width) / 4)) / (width)
+            #return 0
         else:
             return 0
 
