@@ -2,7 +2,7 @@ import numpy as np
 import math
 
 # Variables
-js = np.array(list(range(1, 1001)))
+js = np.array(list(range(1, 101)))
 D_t = 10000
 D = 50000
 h = 25000

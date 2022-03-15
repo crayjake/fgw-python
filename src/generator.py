@@ -58,7 +58,7 @@ def CrankNicolsonDeepDamped(meta: Meta, inp: DataSample, i: int) -> DataSample:
         S_B = np.sin((np.pi) * ((j * D_t / D) + 1)) / ((j * D_t / D) + 1)
         S_j = A_j * (rho_s / 2) * (D_t / np.pi) * (S_A - S_B)
 
-    S_j = S_j * F(meta.x[0, :], L) * meta.S0 * (H(T - (inp.t + meta.dt)) + H(T - inp.t)) / 2
+    S_j = S_j * F(meta.x[0, :], L) * meta.S0 * (2 - H((inp.t + meta.dt) - T) - H(inp.t - T)) / 2
 
     # step
     U = (B @ inp.u[i]) + (dt * f * inp.v[i] * (2 + (dt * alpha(meta.x[0, :]))) / 2) - (dt * (D1 @ (inp.p[i] * (2 + (dt * alpha(meta.x[0, :]))) / 2))) + ((dt ** 2) * (c_jSquared) * (D1 @ S_j) / 2)
@@ -112,7 +112,7 @@ def CrankNicolsonDeep(meta: Meta, inp: DataSample, i: int) -> DataSample:
         S_B = np.sin((np.pi) * ((j * D_t / D) + 1)) / ((j * D_t / D) + 1)
         S_j = A_j * (rho_s / 2) * (D_t / np.pi) * (S_A - S_B)
 
-    S_j = S_j * F(meta.x[0, :], L) * meta.S0 * (H(T - (inp.t + meta.dt)) + H(T - inp.t)) / 2
+    S_j = S_j * F(meta.x[0, :], L) * meta.S0 * (2 - H((inp.t + meta.dt) - T) - H(inp.t - T)) / 2
 
     # step
     U = (B @ inp.u[i]) + (dt * f * inp.v[i]) - (dt * (D1 @ inp.p[i])) + ((dt ** 2) * (c_jSquared) * (D1 @ S_j) / 2)
