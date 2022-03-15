@@ -57,7 +57,7 @@ class animator():
             if plotType == Plot.STREAM:
                 divnorm = colors.TwoSlopeNorm(vmin=-0.3, vcenter=0, vmax=0.3)
                 c = ax.pcolor(middleX(data.meta.x, sponge), middleX(data.meta.z, sponge), middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
-                sp = ax.streamplot(x, z, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k',   arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+                sp = ax.streamplot(x, z, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k',   arrowsize=1, density=0.5, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
 
                 fig.colorbar(c, ax=ax)
 
@@ -76,7 +76,7 @@ class animator():
                 plt.title(f't = {timeString}')
 
             ax.get_xaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
-            ax.get_xaxis().set_minor_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
+            ax.get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
             fig.savefig(f'{path}/images/{prefix}/{index}.jpg', bbox_inches='tight', transparent=False, facecolor='white')
             # Clear the current axes.
             plt.cla() 
@@ -108,14 +108,14 @@ class animator():
         c = ax.pcolor(middleX(data.meta.x, sponge), middleX(data.meta.z, sponge), middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
  
         #skip = int(middleX(data.meta.x, sponge).shape[1]/200)
-        sp = ax.streamplot(middleZ(data.meta.X, sponge), data.meta.Z, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k', arrowsize=1, density=1, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+        sp = ax.streamplot(middleZ(data.meta.X, sponge), data.meta.Z, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k', arrowsize=1, density=0.5, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
     
         #countour = ax.contou
 
         fig.colorbar(c, ax=ax)
 
         ax.get_xaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
-        ax.get_xaxis().set_minor_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
+        ax.get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
         timeString = time.strftime('%H:%M:%S', time.gmtime(inp.t))
         plt.title(f't = {timeString}')
         plt.show()
@@ -137,7 +137,7 @@ class animator():
             ax.plot(middleX(data.meta.x, sponge)[0,::skip], middleX(inp.p, sponge)[0][::skip]*10, f'g:')
 
         ax.get_xaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
-        ax.get_xaxis().set_minor_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
+        ax.get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
         plt.title(f'{prefix} at t = {inp.t}')
         plt.show()
 
