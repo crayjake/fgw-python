@@ -153,7 +153,7 @@ class Meta:
         import math
         self.spongeWidth = (self.space / 2) / 4 # 1 / 5 of the width (where width is x > 0)
         self.c_max = math.sqrt(((self.N * self.D) ** 2) / (((pi) ** 2) + ((self.D ** 2)/(4 * (h ** 2)))))
-        self.alpha = 4 * (self.c_max / self.spongeWidth) # change 4 or 5
+        self.alpha = 5 * (self.c_max / self.spongeWidth) # change 4 or 5
 
         #self.A_damped = np.array([(eye * ((1 + (self.dt * self.alpha)) ** 2)) + A for A in A_bulk])
         #self.B_damped = np.array([(eye * (1 + (self.dt * self.alpha))) - A for A in A_bulk])
