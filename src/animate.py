@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# @Author: Jake Cray
+# @Date:   2021-12-10 09:21:14
+# @Last Modified by:   Jake Cray
+# @Last Modified time: 2022-03-22 13:53:55
 ## Generation of plots/videos/gifs based off of .npy files
 import numpy as np
 from tqdm import tqdm

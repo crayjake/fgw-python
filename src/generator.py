@@ -69,6 +69,16 @@ def CrankNicolsonDeepDamped(meta: Meta, inp: DataSample, i: int) -> DataSample:
     w = (-1) * ((D1 @ (u + inp.u[i])) + inp.w[i])
 
     p = (inp.p[i] + ((dt * c_jSquared) * (((w + inp.w[i]) / 2) - S_j))) / (1 + (dt * alpha(meta.x[0, :])))
+    print(f'-------------------------------------------')
+    print(f'p     max: {np.max(np.abs(p))}')
+    print(f'N        : {N}')
+    print(f'D        : {D}')
+    print(f'j        : {meta.js[i]}')
+    print(f'h        : {h}')
+    print(f'cj2      : {c_jSquared}')
+    print(f'dt alpha : {np.max(np.abs(dt * alpha(meta.x[0, :])))}')
+    print(f'-------------------------------------------')
+
 
     rho = ((1 / g) * (inp.p[i] + p)) - inp.rho[i] # -(1/g)(dp/dz)
 
