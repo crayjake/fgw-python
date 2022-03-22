@@ -1,7 +1,6 @@
-# -*- coding:utf-8 -*-
+# -- library/helpers.py --
 # Author: Jake Cray
 # GitHub: crayjake/fgw-python
-# File:   library/helpers.py
 ''' contains helper functions such as the Heaviside function '''
 
 import numpy as np

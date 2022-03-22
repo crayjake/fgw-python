@@ -1,7 +1,6 @@
-# -*- coding:utf-8 -*-
+# -- library/structures.py --
 # Author: Jake Cray
 # GitHub: crayjake/fgw-python
-# File:   library/structures.py
 ''' contains all the data structures '''
 
 import numpy as np
@@ -112,10 +111,6 @@ class Meta:
 
         else:
             print(f'Deep atmosphere!')
-            print(f'N        : {self.N}')
-            print(f'D        : {self.D}')
-            print(f'j        : 1')
-            print(f'h        : {self.h}')
             self.c_max = sqrt(((self.N * D) ** 2) / (((pi) ** 2) + ((D ** 2)/(4 * ((self.h * 1000) ** 2)))))
 
             A_bulk = np.array([(((self.f**2) * (self.dt ** 2) / 4) - ((((self.N * D) ** 2) / (((j * pi) ** 2) + ((D ** 2)/(4 * ((self.h * 1000) ** 2))))) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])

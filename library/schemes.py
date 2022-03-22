@@ -1,9 +1,7 @@
-# -*- coding:utf-8 -*-
+# -- library/schemes.py --
 # Author: Jake Cray
 # GitHub: crayjake/fgw-python
-# File:   library/schemes.py
 ''' contains the implementations of the numerical schemes '''
-
 
 import numpy as np
 
@@ -63,30 +61,14 @@ def CrankNicolsonDeep(meta: Meta, inp: State, i: int) -> State:
     # step
     U = (B @ inp.u[i]) + (dt * f * inp.v[i] * (2 + (dt * alpha(meta.x[0, :]))) / 2) - (dt * (D1 @ (inp.p[i] * (2 + (dt * alpha(meta.x[0, :]))) / 2))) + ((dt ** 2) * (c_jSquared) * (D1 @ S_j) / 2)
     u = Ainv @ U
-    print(f'u   max: {np.max(np.abs(u))}')
 
     v = (inp.v[i] - (dt * f * (u + inp.u[i]) / 2)) / (1 + (dt * alpha(meta.x[0, :])))
-    print(f'v   max: {np.max(np.abs(v))}')
 
     w = (-1) * ((D1 @ (u + inp.u[i])) + inp.w[i])
-    print(f'w   max: {np.max(np.abs(w))}')
 
     p = (inp.p[i] + ((dt * c_jSquared) * (((w + inp.w[i]) / 2) - S_j))) / (1 + (dt * alpha(meta.x[0, :])))
-    print(f'-------------------------------------------')
-    print(f'p     max: {np.max(np.abs(p))}')
-    print(f'N        : {N}')
-    print(f'D        : {D}')
-    print(f'j        : {meta.js[i]}')
-    print(f'h        : {h}')
-    print(f'pi       : {pi}')
-    print(f'cj2      : {c_jSquared/(meta.c_max ** 2)}')
-    print(f'cmax     : {(meta.c_max ** 2)}')
-    print(f'cj2/cmax : {c_jSquared/(meta.c_max ** 2)}')
-    print(f'dt alpha : {np.max(np.abs(dt * alpha(meta.x[0, :])))}')
-    print(f'-------------------------------------------')
-
+   
     rho = ((1 / g) * (inp.p[i] + p)) - inp.rho[i] # -(1/g)(dp/dz)
-    print(f'rho max: {np.max(np.abs(rho))}')
 
     b = -p - inp.p[i] - inp.b[i]
 

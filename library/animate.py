@@ -1,7 +1,6 @@
-# -*- coding:utf-8 -*-
+# -- library/animate.py --
 # Author: Jake Cray
 # GitHub: crayjake/fgw-python
-# File:   library/animate.py
 ''' class for animating/displaying the data '''
 
 

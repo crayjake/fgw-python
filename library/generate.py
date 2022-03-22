@@ -1,7 +1,6 @@
-# -*- coding:utf-8 -*-
+# -- library/generate.py --
 # Author: Jake Cray
 # GitHub: crayjake/fgw-python
-# File:   library/generate.py
 ''' method for generating the data '''
 
 import tqdm
