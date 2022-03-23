@@ -62,10 +62,9 @@ def converter(inp: State, meta: Meta, mode: int = -1) -> np.ndarray:
                          * phiPrime(z, meta.js[i], h, meta.D, meta.x.shape[0]-1, A_j))
             p[z, :]   += (inp.p[i] * rhoZero(z, rho_s, h, meta.D, meta.x.shape[0]-1)
                          * phiPrime(z, meta.js[i], h, meta.D, meta.x.shape[0]-1, A_j))
-            sample = State(u=u, v=v, w=w, b=b, p=p, rho=rho, t=t)
-        
-        
-        #output = np.append(output, [sample], 0)
+            
+    sample = State(u=u, v=v, w=w, b=b, p=p, rho=rho, t=t)        
+    #output = np.append(output, [sample], 0)
 
     return sample
 

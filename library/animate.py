@@ -33,16 +33,20 @@ def display(data: State, meta: Meta, converter: Callable[[np.ndarray, Meta], np.
         inp = converter(data, meta)
         fig, ax = plt.subplots()
 
-        maxValue = max(np.max(inp.b), -np.min(inp.b)) # maxValue = 0.3
+        maxValue = max(np.max(inp.b), -np.min(inp.b))
+        #maxValue = 0.3
         divnorm = colors.TwoSlopeNorm(vmin=-maxValue, vcenter=0, vmax=maxValue)
 
 
-        cmap = plt.get_cmap('bwr', 45)
-        #cmap = 'bwr'
+        cmap = plt.get_cmap('bwr', 31)
+        cmap = 'bwr'
         c = ax.pcolor(middleX(meta.x, sponge), middleX(meta.z, sponge), middleX(inp.b, sponge) * (273 / 10), cmap=cmap, zorder=0, norm=divnorm)
  
         sp = ax.streamplot(middleZ(meta.X, sponge), meta.Z, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k', arrowsize=1, density=0.5, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
-    
+
+        print(f'MetaAlpha from display: {np.max(meta.spongeAlphaVectorized(meta.x[0,:]))}')
+        ax.plot(meta.x[0,:], 50000 * meta.spongeAlphaVectorized(meta.x[0,:]) / meta.spongeStrength, 'g:')
+
         fig.colorbar(c, ax=ax)
 
         ax.get_xaxis().set_major_formatter(mpl.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))

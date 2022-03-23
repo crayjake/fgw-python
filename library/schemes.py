@@ -27,7 +27,14 @@ def CrankNicolsonDeep(meta: Meta, inp: State, i: int) -> State:
     # sponge damping
     def alpha(xs):
         x = np.copy(xs)
-        return np.where(((meta.W / 2) - meta.spongeWidth) < abs(x), meta.spongeStrength * (8 / meta.W) * (abs(x) - ((meta.W / 2) - meta.spongeWidth)), 0)
+
+        test = meta.spongeAlphaVectorized(x)
+
+        #if(np.max(test) > 0):
+            #print(f'x: {x[np.argmax(test)]}')
+            #print(f'alpha: {np.max(test)}')
+
+        return test
 
     # deep param
     j = meta.js[i]
@@ -58,19 +65,21 @@ def CrankNicolsonDeep(meta: Meta, inp: State, i: int) -> State:
 
     S_j = S_j * meta.heatingForm(meta.x[0, :], L) * meta.S0 * (2 - H((inp.t + meta.dt) - T) - H(inp.t - T)) / 2
 
+    al = alpha(meta.x[0, :])
+
     # step
-    U = (B @ inp.u[i]) + (dt * f * inp.v[i] * (2 + (dt * alpha(meta.x[0, :]))) / 2) - (dt * (D1 @ (inp.p[i] * (2 + (dt * alpha(meta.x[0, :]))) / 2))) + ((dt ** 2) * (c_jSquared) * (D1 @ S_j) / 2)
+    U = (B @ inp.u[i]) + (dt * f * inp.v[i] * (2 + (dt * al)) / 2) - (dt * (D1 @ (inp.p[i] * (2 + (dt * al)) / 2))) + ((dt ** 2) * (c_jSquared) * (D1 @ S_j) / 2)
     u = Ainv @ U
 
-    v = (inp.v[i] - (dt * f * (u + inp.u[i]) / 2)) / (1 + (dt * alpha(meta.x[0, :])))
+    v = (inp.v[i] - (dt * f * (u + inp.u[i]) / 2)) / (1 + (dt * al))
 
     w = (-1) * ((D1 @ (u + inp.u[i])) + inp.w[i])
 
-    p = (inp.p[i] + ((dt * c_jSquared) * (((w + inp.w[i]) / 2) - S_j))) / (1 + (dt * alpha(meta.x[0, :])))
+    p = (inp.p[i] + ((dt * c_jSquared) * (((w + inp.w[i]) / 2) - S_j))) / (1 + (dt * al))
    
     rho = ((1 / g) * (inp.p[i] + p)) - inp.rho[i] # -(1/g)(dp/dz)
 
-    b = -p - inp.p[i] - inp.b[i]
+    b = -p
 
 
     return State(u=u, v=v, w=w, p=p, b=b, rho=rho, t=inp.t + meta.dt)

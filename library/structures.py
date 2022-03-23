@@ -127,6 +127,9 @@ class Meta:
             print(f'Using a sponge layer')
             spongeWidth = (W / 2) * self.sponge
             spongeStrength = self.damping * (self.c_max / spongeWidth)
+            print(f'spongeStrength: {spongeStrength}')
+            print(f'c_max: {self.c_max}')
+            print(f'spongeWidth: {spongeWidth}')
 
         self.spongeWidth    = spongeWidth
         self.spongeStrength = spongeStrength
@@ -139,19 +142,35 @@ class Meta:
             for i in range(self.spacesteps):
                 x = (i - (self.spacesteps / 2)) * (W / self.spacesteps)
 
-                alpha = 0
-                if ((W / 2) - spongeWidth) < abs(x) < (W / 2):
-                    # then we are within the sponge layer
-                    alpha = spongeStrength * (8 / W) * (abs(x) - ((W / 2) - spongeWidth))
-                
-                alphas = np.append(alphas, alpha / spongeStrength)
+                alpha = self.spongeAlpha(x)
+                alphas = np.append(alphas, alpha)
 
-                self.A[a][i][i] *= (1 + (self.dt * alpha))
-                self.B[a][i][i] *= (1 + (self.dt * alpha))
+                if abs(x) > W / 2:
+                    print(f'ABS X IS TOO BIG')
+
+                self.A[a][i][i] += self.dt * alpha
+                self.B[a][i][i] += self.dt * alpha
 
             self.A[a] += A_bulk[a]
             self.B[a] -= A_bulk[a]
 
-            print(f'Alpha: {np.min(alphas)}, {np.max(alphas)}')
+            print(f'Alpha: {np.min(alphas)}, {np.max(alphas)/spongeStrength}')
 
         self.Ainv = np.array([np.linalg.inv(A) for A in self.A], dtype='float64')
+
+        #self.spongeAlphaVectorized = np.vectorize(self.spongeAlpha)
+
+    def spongeAlphaVectorized(self, xs):
+        x = np.copy(xs)
+        for i in range(len(x)):
+            x[i] = self.spongeAlpha(x[i])
+
+        return x
+
+    def spongeAlpha(self, x):
+        al = 0
+        if ((self.W / 2) * (1 - self.sponge)) < abs(x) < (self.W / 2):
+            # then we are within the sponge layer
+            al = (2 / (self.W * self.sponge)) * (abs(x) - ((self.W / 2) * (1 - self.sponge)))
+                
+        return self.spongeStrength * (al ** 2)
