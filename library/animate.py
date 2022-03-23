@@ -10,7 +10,7 @@ import numpy as np
 from typing import Callable
 from matplotlib import colors
 from matplotlib import pyplot as plt
-plt.rcParams['pcolor.shading'] ='nearest'
+#plt.rcParams['pcolor.shading'] ='nearest'
 import matplotlib as mpl
 mpl.rcParams['figure.dpi'] = 200
 
