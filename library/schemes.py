@@ -27,7 +27,7 @@ def CrankNicolsonDeep(meta: Meta, inp: State, i: int) -> State:
     # sponge damping
     def alpha(xs):
         x = np.copy(xs)
-        return np.where(((meta.W / 2) - meta.spongeWidth) < abs(x), 4 * meta.spongeStrength * (abs(x) - ((meta.W / 2) - meta.spongeWidth)) / (meta.W / 2), 0)
+        return np.where(((meta.W / 2) - meta.spongeWidth) < abs(x), meta.spongeStrength * (8 / meta.W) * (abs(x) - ((meta.W / 2) - meta.spongeWidth)), 0)
 
     # deep param
     j = meta.js[i]

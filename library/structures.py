@@ -125,7 +125,7 @@ class Meta:
 
         else: 
             print(f'Using a sponge layer')
-            spongeWidth = 1000 * (self.width / 2) * self.sponge
+            spongeWidth = (W / 2) * self.sponge
             spongeStrength = self.damping * (self.c_max / spongeWidth)
 
         self.spongeWidth    = spongeWidth
@@ -135,18 +135,23 @@ class Meta:
         self.B = np.array([np.eye(self.spacesteps)] * len(A_bulk), dtype='float64')
 
         for a in range(len(A_bulk)):
+            alphas = np.array([])
             for i in range(self.spacesteps):
                 x = (i - (self.spacesteps / 2)) * (W / self.spacesteps)
 
                 alpha = 0
                 if ((W / 2) - spongeWidth) < abs(x) < (W / 2):
                     # then we are within the sponge layer
-                    alpha = 4 * spongeStrength * (abs(x) - ((W / 2) - spongeWidth)) / (W / 2)
+                    alpha = spongeStrength * (8 / W) * (abs(x) - ((W / 2) - spongeWidth))
+                
+                alphas = np.append(alphas, alpha / spongeStrength)
 
                 self.A[a][i][i] *= (1 + (self.dt * alpha))
                 self.B[a][i][i] *= (1 + (self.dt * alpha))
 
             self.A[a] += A_bulk[a]
             self.B[a] -= A_bulk[a]
+
+            print(f'Alpha: {np.min(alphas)}, {np.max(alphas)}')
 
         self.Ainv = np.array([np.linalg.inv(A) for A in self.A], dtype='float64')
