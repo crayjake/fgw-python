@@ -107,13 +107,15 @@ class Meta:
             print(f'Shallow atmosphere!')
             self.c_max = (self.N * D) / pi
             
-            A_bulk = np.array([(((self.f**2) * (self.dt ** 2) / 4) - ((((self.N * D) ** 2) / (((j * pi) ** 2))) * (self.dt ** 2) * self.D2 / 4)) for j in self.js], dtype='float64')
+            c_squared = lambda j : (((self.N * D) ** 2) / (((j * pi) ** 2)))
 
         else:
             print(f'Deep atmosphere!')
             self.c_max = sqrt(((self.N * D) ** 2) / (((pi) ** 2) + ((D ** 2)/(4 * ((self.h * 1000) ** 2)))))
 
-            A_bulk = np.array([(((self.f**2) * (self.dt ** 2) / 4) - ((((self.N * D) ** 2) / (((j * pi) ** 2) + ((D ** 2)/(4 * ((self.h * 1000) ** 2))))) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
+            c_squared = lambda j : (((self.N * D) ** 2) / (((j * pi) ** 2) + ((D ** 2)/(4 * ((self.h * 1000) ** 2)))))
+
+        A_bulk = np.array([(((self.f**2) * (self.dt ** 2) / 4) - (c_squared(j) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
 
 
         # check if using a sponge layer
@@ -127,9 +129,9 @@ class Meta:
             print(f'Using a sponge layer')
             spongeWidth = (W / 2) * self.sponge
             spongeStrength = self.damping * (self.c_max / spongeWidth)
-            print(f'spongeStrength: {spongeStrength}')
-            print(f'c_max: {self.c_max}')
-            print(f'spongeWidth: {spongeWidth}')
+            print(f'DEBUG: spongeStrength: {spongeStrength}')
+            print(f'DEBUG: spongeWidth:    {spongeWidth}')
+            print(f'DEBUG: c_max:          {self.c_max}')
 
         self.spongeWidth    = spongeWidth
         self.spongeStrength = spongeStrength
@@ -145,20 +147,88 @@ class Meta:
                 alpha = self.spongeAlpha(x)
                 alphas = np.append(alphas, alpha)
 
-                if abs(x) > W / 2:
-                    print(f'ABS X IS TOO BIG')
 
-                self.A[a][i][i] += self.dt * alpha
-                self.B[a][i][i] += self.dt * alpha
+                #self.A[a][i][i] *= (1 + self.dt * alpha) ** 2
+                #self.B[a][i][i] *= (1 +self.dt * alpha)
+                self.A[a][i][i] += (self.dt * alpha) ** 2
+                self.B[a][i][i] += (self.dt * alpha) ** 1
 
             self.A[a] += A_bulk[a]
             self.B[a] -= A_bulk[a]
 
             print(f'Alpha: {np.min(alphas)}, {np.max(alphas)/spongeStrength}')
-
         self.Ainv = np.array([np.linalg.inv(A) for A in self.A], dtype='float64')
 
-        #self.spongeAlphaVectorized = np.vectorize(self.spongeAlpha)
+
+    # NOTE: if changing to/from sponge/deep then must regenerate matrices
+    def GenerateMatricesTest(self):
+        print(f'Generating finite difference matrices')
+        spacesteps = self.spacesteps
+        D1 = np.zeros((spacesteps, spacesteps), dtype='float64')
+        D2 = np.zeros((spacesteps, spacesteps), dtype='float64')
+
+        cx=0
+        while cx < spacesteps:
+            D1[cx, (cx+1) % spacesteps] =  1
+            D1[cx, (cx-1) % spacesteps] = -1
+
+            D2[cx, (cx-1) % spacesteps] =  1
+            D2[cx, (cx)   % spacesteps] = -2
+            D2[cx, (cx+1) % spacesteps] =  1
+
+            cx = cx + 1
+
+        self.D1 = D1 / (2 * self.dx)
+        self.D2 = D2 / (self.dx ** 2)
+
+        print(f'Generating Crank-Nicolson matrices')
+        # get width and depth in m
+        W = self.width * 1000
+        D = self.depth * 1000
+        self.W = W
+        self.D = D
+
+        self.c_max = 1
+        A_bulk = np.array([(self.dt * self.D1 / 2) for j in self.js])
+
+
+        # check if using a sponge layer
+        if (self.sponge == 0) and (self.damping == 0):
+            print(f'Not using a sponge layer')
+            spongeWidth = 0
+            spongeStrength = 0
+            
+
+        else: 
+            print(f'Using a sponge layer')
+            spongeWidth = (W / 2) * self.sponge
+            spongeStrength = self.damping  * (self.c_max / spongeWidth)
+            print(f'DEBUG: spongeStrength: {spongeStrength}')
+            print(f'DEBUG: spongeWidth:    {spongeWidth}')
+            print(f'DEBUG: c_max:          {self.c_max}')
+
+        self.spongeWidth    = spongeWidth
+        self.spongeStrength = spongeStrength
+
+        self.A = np.array([np.eye(self.spacesteps)] * len(A_bulk), dtype='float64')
+        self.B = np.array([np.eye(self.spacesteps)] * len(A_bulk), dtype='float64')
+
+        for a in range(len(A_bulk)):
+            alphas = np.array([])
+            for i in range(self.spacesteps):
+                x = (i - (self.spacesteps / 2)) * (W / self.spacesteps)
+
+                alpha = self.spongeAlpha(x)
+                alphas = np.append(alphas, alpha)
+
+                self.A[a][i][i] += (self.dt * alpha) ** 1
+
+            self.A[a] += A_bulk[a]
+            self.B[a] -= A_bulk[a]
+
+            print(f'Alpha: {np.min(alphas)}, {np.max(alphas)/spongeStrength}')
+        self.Ainv = np.array([np.linalg.inv(A) for A in self.A], dtype='float64')
+
 
     def spongeAlphaVectorized(self, xs):
         x = np.copy(xs)
@@ -169,8 +239,10 @@ class Meta:
 
     def spongeAlpha(self, x):
         al = 0
-        if ((self.W / 2) * (1 - self.sponge)) < abs(x) < (self.W / 2):
+        if ((self.W / 2) * (1 - self.sponge)) < abs(x):
             # then we are within the sponge layer
-            al = (2 / (self.W * self.sponge)) * (abs(x) - ((self.W / 2) * (1 - self.sponge)))
+            # al = (2 / (self.W * self.sponge)) * (abs(x) - ((self.W / 2) * (1 - self.sponge)))
+            val = (abs(x) - ((self.W / 2) * (1 - self.sponge)))
+            al = np.sin(0.5 * np.pi * val / ((self.W / 2) * self.sponge)) ** 2
                 
-        return self.spongeStrength * (al ** 2)
+        return self.spongeStrength * (al)

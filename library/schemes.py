@@ -25,16 +25,8 @@ def CrankNicolsonDeep(meta: Meta, inp: State, i: int) -> State:
     f = meta.f
 
     # sponge damping
-    def alpha(xs):
-        x = np.copy(xs)
+    alpha = lambda x: meta.spongeAlphaVectorized(x) 
 
-        test = meta.spongeAlphaVectorized(x)
-
-        #if(np.max(test) > 0):
-            #print(f'x: {x[np.argmax(test)]}')
-            #print(f'alpha: {np.max(test)}')
-
-        return test
 
     # deep param
     j = meta.js[i]
@@ -79,7 +71,53 @@ def CrankNicolsonDeep(meta: Meta, inp: State, i: int) -> State:
    
     rho = ((1 / g) * (inp.p[i] + p)) - inp.rho[i] # -(1/g)(dp/dz)
 
-    b = -p
+    b = -p - inp.p[i] - inp.b[i]
 
 
     return State(u=u, v=v, w=w, p=p, b=b, rho=rho, t=inp.t + meta.dt)
+
+def Simple(meta: Meta, inp: State, i: int) -> State:
+    # matrices
+    Ainv = meta.Ainv[i]
+    B = meta.B[i]
+    D1 = meta.D1
+    D2 = meta.D2
+
+    # parameters (for simpler code)
+    T = meta.T
+    L = meta.L
+    N = meta.N
+    dt = meta.dt
+    f = meta.f
+
+    # sponge damping
+    alpha = lambda x: meta.spongeAlphaVectorized(x) 
+
+
+    # deep param
+    j = meta.js[i]
+    h = meta.h * 1000
+    rho_s = 1
+    g = 10 # gravity
+    N = meta.N
+    D = meta.D
+    D_t = meta.D_t * 1000
+
+    # modal variables
+    A_j = sqrt(2 / (rho_s * (N ** 2) * meta.D))
+
+    
+    al = alpha(meta.x[0, :])
+
+    S_j = meta.heatingForm(meta.x[0, :], L) * meta.S0 * (2 - H((inp.t + meta.dt) - T) - H(inp.t - T)) / 2
+
+
+    # step
+    if inp.t == 0:
+        inp.u[:] = meta.heatingForm(meta.x[0, :], L)
+
+    U = (B @ inp.u[i])
+    u = Ainv @ U
+
+
+    return State(u=u, v=inp.v, w=inp.w, p=inp.p, b=u, rho=inp.rho, t=inp.t + meta.dt)
