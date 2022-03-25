@@ -115,9 +115,12 @@ def Simple(meta: Meta, inp: State, i: int) -> State:
     # step
     if inp.t == 0:
         inp.u[:] = meta.heatingForm(meta.x[0, :], L)
-
-    U = (B @ inp.u[i])
+        
+    U = (B @ inp.u[i]) + (dt * inp.v[i] * (2 + (al * dt)) / 2)
     u = Ainv @ U
 
+    v = (inp.v[i] + (dt * (D2 @ (u + inp.u[i]) / 2))) / (1 + (al * dt))
 
-    return State(u=u, v=inp.v, w=inp.w, p=inp.p, b=u, rho=inp.rho, t=inp.t + meta.dt)
+
+
+    return State(u=u, v=v, w=inp.w, p=inp.p, b=u, rho=inp.rho, t=inp.t + meta.dt)

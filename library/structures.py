@@ -150,8 +150,8 @@ class Meta:
 
                 #self.A[a][i][i] *= (1 + self.dt * alpha) ** 2
                 #self.B[a][i][i] *= (1 +self.dt * alpha)
-                self.A[a][i][i] += (self.dt * alpha) ** 2
-                self.B[a][i][i] += (self.dt * alpha) ** 1
+                self.A[a][i][i] = (1 + self.dt * alpha) ** 2
+                self.B[a][i][i] = (1 + self.dt * alpha) ** 1
 
             self.A[a] += A_bulk[a]
             self.B[a] -= A_bulk[a]
@@ -189,7 +189,7 @@ class Meta:
         self.D = D
 
         self.c_max = 1
-        A_bulk = np.array([(self.dt * self.D1 / 2) for j in self.js])
+        A_bulk = np.array([((self.dt ** 2) * self.D2 / 4) for j in self.js])
 
 
         # check if using a sponge layer
@@ -221,7 +221,8 @@ class Meta:
                 alpha = self.spongeAlpha(x)
                 alphas = np.append(alphas, alpha)
 
-                self.A[a][i][i] += (self.dt * alpha) ** 1
+                self.A[a][i][i] = (1 + (self.dt * alpha)) ** 2
+                self.B[a][i][i] = (1 + (self.dt * alpha))
 
             self.A[a] += A_bulk[a]
             self.B[a] -= A_bulk[a]
