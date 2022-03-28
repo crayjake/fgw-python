@@ -17,13 +17,13 @@ def G(x, L):
     return 1000 * L * np.tanh(x / (L * 1000))
 
 # gets middle 3/4 of list (2nd dim)
-def middleX(arr, sponge):
-    if not sponge:
+def middleX(arr, showSponge):
+    if showSponge:
         return arr        
     return arr[::,ceil(len(arr)/8):][::,:-ceil(len(arr)/8)]
 
 # gets middle 3/4 of list (1st dim)
 def middleZ(arr, sponge):
-    if not sponge:
+    if showSponge:
         return arr
     return arr[ceil(len(arr)/8):][:-ceil(len(arr)/8)]

@@ -3,6 +3,7 @@
 # GitHub: crayjake/fgw-python
 ''' contains all the data structures '''
 
+from xmlrpc.client import Boolean
 import numpy as np
 
 from dataclasses import dataclass
@@ -59,6 +60,9 @@ class Meta:
 
     heatingForm:     Callable[[np.ndarray, int], float] = F
 
+    # generate all the matrices or just use metadata for visualising already simulated data
+    generateData: Boolean = True
+
     # run after dataclass init
     def __post_init__(self):
         print(f'Starting metadata generation')
@@ -72,10 +76,14 @@ class Meta:
         self.Z = 1000 * np.linspace(0, self.depth, self.spacesteps, endpoint = True)
         self.x, self.z = np.meshgrid(self.X, self.Z)
         
-        self.GenerateMatrices()
+        self.W = self.width * 1000
+        self.D = self.depth * 1000
+
+        if self.generateData:
+            self.GenerateData()
 
     # NOTE: if changing to/from sponge/deep then must regenerate matrices
-    def GenerateMatrices(self):
+    def GenerateData(self):
         print(f'Generating finite difference matrices')
         spacesteps = self.spacesteps
         D1 = np.zeros((spacesteps, spacesteps), dtype='float64')
@@ -97,10 +105,8 @@ class Meta:
 
         print(f'Generating Crank-Nicolson matrices')
         # get width and depth in m
-        W = self.width * 1000
-        D = self.depth * 1000
-        self.W = W
-        self.D = D
+        W = self.W
+        D = self.D
 
         # check if shallow or deep atmosphere
         if self.h == 0:
