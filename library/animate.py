@@ -14,7 +14,7 @@ from matplotlib import colors
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-plt.rcParams['pcolor.shading'] = 'nearest'
+# plt.rcParams['pcolor.shading'] = 'nearest'
 import matplotlib as mpl
 
 mpl.rcParams['figure.dpi'] = 250
@@ -32,8 +32,8 @@ def display(data:            State,
             converter:       Callable[[np.ndarray, Meta], np.ndarray],
             prefix:          string  = '',
             maxValue:        float   = 0.3,
-            showSpongeLayer: boolean = False,
-            showStreamPlot:  boolean = False,
+            showSpongeLayer: bool    = False,
+            showStreamPlot:  bool    = False,
             cmapDivisions:   int     = 31):
 
     # convert data using provided converter
@@ -97,8 +97,8 @@ def animation(dataArray:       np.array,
               converter:       Callable[[np.ndarray, Meta], np.ndarray],
               prefix:          string  = '',
               maxValue:        float   = 0.3,
-              showSpongeLayer: boolean = False,
-              showStreamPlot:  boolean = False,
+              showSpongeLayer: bool    = False,
+              showStreamPlot:  bool    = False,
               cmapDivisions:   int     = 31,
               skip:            int     = 2,
               directory:       string  = 'test'):

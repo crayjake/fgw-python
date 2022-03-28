@@ -78,6 +78,38 @@ class Meta:
         
         self.W = self.width * 1000
         self.D = self.depth * 1000
+        D = self.D
+
+        # check if shallow or deep atmosphere
+        if self.h == 0:
+            print(f'Shallow atmosphere!')
+            self.c_max = (self.N * D) / pi
+            
+            self.c_squared = lambda j : (((self.N * D) ** 2) / (((j * pi) ** 2)))
+
+        else:
+            print(f'Deep atmosphere!')
+            self.c_max = sqrt(((self.N * D) ** 2) / (((pi) ** 2) + ((D ** 2)/(4 * ((self.h * 1000) ** 2)))))
+
+            self.c_squared = lambda j : (((self.N * D) ** 2) / (((j * pi) ** 2) + ((D ** 2)/(4 * ((self.h * 1000) ** 2)))))
+
+        # check if using a sponge layer
+        if (self.sponge == 0) and (self.damping == 0):
+            print(f'Not using a sponge layer')
+            spongeWidth = 0
+            spongeStrength = 0
+            
+        else: 
+            print(f'Using a sponge layer')
+            spongeWidth = (self.W / 2) * self.sponge
+            spongeStrength = self.damping * (self.c_max / spongeWidth)
+            print(f'DEBUG: spongeStrength: {spongeStrength}')
+            print(f'DEBUG: spongeWidth:    {spongeWidth}')
+            print(f'DEBUG: c_max:          {self.c_max}')
+
+        self.spongeWidth    = spongeWidth
+        self.spongeStrength = spongeStrength
+
 
         if self.generateData:
             self.GenerateData()
@@ -108,39 +140,8 @@ class Meta:
         W = self.W
         D = self.D
 
-        # check if shallow or deep atmosphere
-        if self.h == 0:
-            print(f'Shallow atmosphere!')
-            self.c_max = (self.N * D) / pi
-            
-            c_squared = lambda j : (((self.N * D) ** 2) / (((j * pi) ** 2)))
+        A_bulk = np.array([(((self.f**2) * (self.dt ** 2) / 4) - (self.c_squared(j) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
 
-        else:
-            print(f'Deep atmosphere!')
-            self.c_max = sqrt(((self.N * D) ** 2) / (((pi) ** 2) + ((D ** 2)/(4 * ((self.h * 1000) ** 2)))))
-
-            c_squared = lambda j : (((self.N * D) ** 2) / (((j * pi) ** 2) + ((D ** 2)/(4 * ((self.h * 1000) ** 2)))))
-
-        A_bulk = np.array([(((self.f**2) * (self.dt ** 2) / 4) - (c_squared(j) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
-
-
-        # check if using a sponge layer
-        if (self.sponge == 0) and (self.damping == 0):
-            print(f'Not using a sponge layer')
-            spongeWidth = 0
-            spongeStrength = 0
-            
-
-        else: 
-            print(f'Using a sponge layer')
-            spongeWidth = (W / 2) * self.sponge
-            spongeStrength = self.damping * (self.c_max / spongeWidth)
-            print(f'DEBUG: spongeStrength: {spongeStrength}')
-            print(f'DEBUG: spongeWidth:    {spongeWidth}')
-            print(f'DEBUG: c_max:          {self.c_max}')
-
-        self.spongeWidth    = spongeWidth
-        self.spongeStrength = spongeStrength
 
         self.A = np.array([np.eye(self.spacesteps)] * len(A_bulk), dtype='float64')
         self.B = np.array([np.eye(self.spacesteps)] * len(A_bulk), dtype='float64')
@@ -162,7 +163,7 @@ class Meta:
             self.A[a] += A_bulk[a]
             self.B[a] -= A_bulk[a]
 
-            print(f'Alpha: {np.min(alphas)}, {np.max(alphas)/spongeStrength}')
+            #print(f'Alpha: {np.min(alphas)}, {np.max(alphas)/self.spongeStrength}')
         self.Ainv = np.array([np.linalg.inv(A) for A in self.A], dtype='float64')
 
 
