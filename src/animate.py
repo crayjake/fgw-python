@@ -1,154 +1,204 @@
-# Generation of plots/videos/gifs based off of .npy files
-import numpy as np
-from tqdm import tqdm
+# -- library/animate.py --
+# Author: Jake Cray
+# GitHub: crayjake/fgw-python
+''' class for animating/displaying the data '''
+
 import os
-import math
+import string
 import time
 
-import matplotlib
-#matplotlib.use('Agg')
-from matplotlib import pyplot as plt
+import numpy as np
 
-import matplotlib as mpl
-mpl.rcParams['figure.dpi'] = 300
-
+from typing import Callable
 from matplotlib import colors
+from matplotlib import pyplot as plt
+from matplotlib.animation import FuncAnimation
 
-from data import Data
+# plt.rcParams['pcolor.shading'] = 'nearest'
+import matplotlib as mpl
 
-import subprocess
+mpl.rcParams['figure.dpi'] = 250
 
-from enum import Enum
+plt.style.use('seaborn-pastel')
 
-class Plot(Enum):
-    STREAM=0,
-    LINE=1
+import tqdm
 
-class LineType(Enum):
-    U=1,
-    W=2,
-    B=3,
-    P=4,
-    V=5,
-    ALL=0
 
-class animator():
+from helpers import middleX, middleZ
+from structures import State, Meta
 
-    def images(self, data: Data, path, title:bool = False, plotType:Plot = Plot.STREAM, lineType:LineType = None, sponge=True):
-        skip = int(data.meta.x.shape[1]/200)
-        prefix = ''
-        if plotType == Plot.STREAM:
-            prefix = 'stream'
-        elif plotType == Plot.LINE:
-            prefix = 'line'
+def display(data:            State,
+            meta:            Meta,
+            converter:       Callable[[np.ndarray, Meta], np.ndarray],
+            prefix:          string  = '',
+            maxValue:        float   = 0.3,
+            showSpongeLayer: bool    = False,
+            showStreamPlot:  bool    = False,
+            cmapDivisions:   int     = 31):
 
-        if not os.path.exists(f'{path}/images'):
-            os.makedirs(f'{path}/images')
-        
-        if not os.path.exists(f'{path}/images/{prefix}'):
-            os.makedirs(f'{path}/images/{prefix}')
-        
-        x = middleZ(data.meta.X, sponge)
-        z = data.meta.Z
-        index = int(data.data[0].t / data.meta.dt)
-        for inp in tqdm(data.data):
-            fig, ax = plt.subplots()
-            
-            if plotType == Plot.STREAM:
-                divnorm = colors.TwoSlopeNorm(vmin=-0.3, vcenter=0, vmax=0.3)
-                c = ax.pcolor(middleX(data.meta.x, sponge), middleX(data.meta.z, sponge), middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
-                sp = ax.streamplot(x, z, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k',   arrowsize=1, density=0.5, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+    # convert data using provided converter
+    # this turns our 1D data into 2D by adding z-dep
+    inp = converter(data, meta)
+    fig, ax = plt.subplots()
 
-                fig.colorbar(c, ax=ax)
+    # find max value and set up colour bar
+    #maxValue = max(np.max(inp.b), -np.min(inp.b))
+    #maxValue = 8e-8
+    divnorm = colors.TwoSlopeNorm(vmin=-maxValue, vcenter=0, vmax=maxValue)
 
-            elif plotType == Plot.LINE:
-                if lineType == LineType.U or lineType == LineType.ALL:
-                    ax.plot(middleX(data.meta.x, sponge)[0,::skip], middleX(inp.u, sponge)[0][::skip], f'k{"--" if lineType == LineType.ALL else ""}')
-                if lineType == LineType.W or lineType == LineType.ALL:
-                    ax.plot(middleX(data.meta.x, sponge)[0,::skip], middleX(inp.w, sponge)[0][::skip]*10, f'k{"-" if lineType == LineType.ALL else ""}')
-                if lineType == LineType.B or lineType == LineType.ALL:
-                    ax.plot(middleX(data.meta.x, sponge)[0,::skip], middleX(inp.b, sponge)[0][::skip] * (273 / 10), f'k{":" if lineType == LineType.ALL else ""}')
-                if lineType == LineType.P:
-                    ax.plot(middleX(data.meta.x, sponge)[0,::skip], middleX(inp.p, sponge)[0][::skip]*10, f'k')
+    # set up colour map to have 31 discrete values
+    cmap = plt.get_cmap('bwr', cmapDivisions)
+    #cmap = 'bwr'
 
-            if title:        
-                timeString = time.strftime('%H:%M:%S', time.gmtime(inp.t))
-                plt.title(f't = {timeString}')
-
-            ax.get_xaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
-            ax.get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
-            fig.savefig(f'{path}/images/{prefix}/{index}.jpg', bbox_inches='tight', transparent=False, facecolor='white')
-            # Clear the current axes.
-            plt.cla() 
-            # Clear the current figure.
-            plt.clf() 
-            # Closes all the figure windows.
-            plt.close('all')
-            
-            index += 1
-
-    def gif(self, input: str, output: str, framerate: int = 10):
-        file = output
-        if not output.__contains__('.gif'):
-            file = f'{output}/run.gif'
-        
-        subprocess.run([f'echo Y | ffmpeg -framerate {framerate} -start_number 0 -i {input}/%d.jpg -vf "scale=-2:512" -pix_fmt yuv420p {file}'], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        
-    def display(self, data, t, prefix='', sponge=True):
-        skip = 1#math.ceil(data.meta.x.shape[1]/200)
-        #print(f'SKIP: {math.ceil(data.meta.x.shape[1]/200)}')
-        inp = data.data[t]
-        fig, ax = plt.subplots()
-
-        #divnorm = colors.BoundaryNorm(np.linspace(-0.3, 0.3, 30), plt.get_cmap('bwr').N)
-        divnorm = colors.TwoSlopeNorm(vmin=-0.3, vcenter=0, vmax=0.3)
-        #divnorm=colors.TwoSlopeNorm(vcenter=0)
-
-        #c = ax.pcolor(data.meta.x[::,::skip]/1000, data.meta.z[::,::skip]/1000, inp.b[::,::skip] * (273 / 10), cmap=plt.get_cmap('bwr', 30), shading='auto', zorder=0, norm=divnorm)
-        c = ax.pcolor(middleX(data.meta.x, sponge), middleX(data.meta.z, sponge), middleX(inp.b, sponge) * (273 / 10), cmap=plt.get_cmap('bwr', 30), zorder=0, norm=divnorm)
- 
-        #skip = int(middleX(data.meta.x, sponge).shape[1]/200)
-        sp = ax.streamplot(middleZ(data.meta.X, sponge), data.meta.Z, middleX(inp.u, sponge), middleX(inp.w, sponge), color='k', arrowsize=1, density=0.5, linewidth=0.5, zorder=1)#, linewidth=lw)#,    density=0.8) # color=lw, cmap='Greys')
+    # colour plot
+    c = ax.pcolor(middleX(meta.x, showSpongeLayer),
+                  middleX(meta.z, showSpongeLayer),
+                  middleX(inp.b,  showSpongeLayer) * (273 / 10),
+                  cmap=cmap,
+                  zorder=0,
+                  norm=divnorm)
     
-        #countour = ax.contou
+    # streamplot
+    if showStreamPlot:
+        sp = ax.streamplot(
+            middleZ(meta.X, showSpongeLayer),
+            meta.Z,
+            middleX(inp.u,  showSpongeLayer),
+            middleX(inp.w,  showSpongeLayer),
+            color='k',
+            arrowsize=1,
+            density=0.5,
+            linewidth=0.5,
+            zorder=1)
 
-        fig.colorbar(c, ax=ax)
 
-        ax.get_xaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
-        ax.get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
-        timeString = time.strftime('%H:%M:%S', time.gmtime(inp.t))
-        plt.title(f't = {timeString}')
-        plt.show()
+    # plot alpha as a green dotted line (plotted as a percentage of the total depth)
+    ax.plot(
+        meta.x[0, :],
+        meta.D * meta.spongeAlphaVectorized(meta.x[0, :]) / meta.spongeStrength,
+        'g:')
 
-    def display_line(self, data, time, lineType = LineType.ALL, prefix='', sponge=True):
-        skip = math.ceil(middleX(data.meta.x).shape[1]/200)
-        inp = data.data[time]
+
+    # add colour bar and format plot
+    fig.colorbar(c, ax=ax)
+    ax.get_xaxis().set_major_formatter(
+        mpl.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
+    ax.get_yaxis().set_major_formatter(
+        mpl.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
+    timeString = time.strftime('%H:%M:%S', time.gmtime(inp.t))
+    plt.title(f't = {timeString}')
+
+    # show plot
+    plt.show()
+
+
+def animation(dataArray:       np.array,
+              meta:            Meta,
+              converter:       Callable[[np.ndarray, Meta], np.ndarray],
+              prefix:          string  = '',
+              maxValue:        float   = 0.3,
+              showSpongeLayer: bool    = False,
+              showStreamPlot:  bool    = False,
+              cmapDivisions:   int     = 31,
+              skip:            int     = 2,
+              directory:       string  = 'test'):
+
+
+
+    # find max value and set up colour bar
+    #maxValue = max(np.max(inp.b), -np.min(inp.b))
+    #maxValue = 8e-8
+    divnorm = colors.TwoSlopeNorm(vmin=-maxValue, vcenter=0, vmax=maxValue)
+
+    # set up colour map to have 31 discrete values
+    cmap = plt.get_cmap('bwr', cmapDivisions)
+    #cmap = 'bwr'
+
+    x = meta.x[::skip, ::skip]
+    z = meta.z[::skip, ::skip]
+
+    if not os.path.exists(f'../data/{directory}'):
+        os.makedirs(f'../data/{directory}')
+
+
+    for i in tqdm.tqdm(range(len(dataArray))):
+        data = dataArray[i]
+
         fig, ax = plt.subplots()
+        # add colour bar and format plot
+        ax.get_xaxis().set_major_formatter(
+            mpl.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
+        ax.get_yaxis().set_major_formatter(
+            mpl.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
 
-        if lineType == LineType.U or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x, sponge)[0], middleX(inp.u, sponge)[0], f'b{"--" if lineType == LineType.ALL else ""}')
-        if lineType == LineType.V or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x, sponge)[0], middleX(inp.v, sponge)[0], f'p{"--" if lineType == LineType.ALL else ""}')
-        if lineType == LineType.W or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x, sponge)[0], middleX(inp.w, sponge)[0]*10, f'r{"-" if lineType == LineType.ALL else ""}')
-        if lineType == LineType.B or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x, sponge)[0], middleX(inp.b, sponge)[0]*10, f'k{":" if lineType == LineType.ALL else ""}')
-        if lineType == LineType.P or lineType == LineType.ALL:
-            ax.plot(middleX(data.meta.x, sponge)[0,::skip], middleX(inp.p, sponge)[0][::skip]*10, f'g:')
 
-        ax.get_xaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
-        ax.get_yaxis().set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
-        plt.title(f'{prefix} at t = {inp.t}')
-        plt.show()
+        from matplotlib.cm import ScalarMappable
+        level_boundaries = np.linspace(-maxValue, maxValue, cmapDivisions + 1)
 
-# gets middle 3/4 of list (2nd dim)
-def middleX(arr, sponge):
-    if not sponge:
-        return arr        
-    return arr[::,math.ceil(len(arr)/8):][::,:-math.ceil(len(arr)/8)]
 
-# gets middle 3/4 of list (1st dim)
-def middleZ(arr, sponge):
-    if not sponge:
-        return arr
-    return arr[math.ceil(len(arr)/8):][:-math.ceil(len(arr)/8)]
+        # convert data using provided converter
+        # this turns our 1D data into 2D by adding z-dep
+        inp = converter(data, meta)
+        # colour plot
+        c = ax.pcolormesh(middleX(x, showSpongeLayer),
+                      middleX(z, showSpongeLayer),
+                      middleX(inp.b[::skip,::skip],  showSpongeLayer) * (273 / 10),
+                      cmap=cmap,
+                      zorder=0,
+                      norm=divnorm,
+                      shading='auto')
+        '''c = ax.contourf(
+                      middleX(x, showSpongeLayer),
+                      middleX(z, showSpongeLayer),
+                      middleX(inp.b[::skip,::skip],  showSpongeLayer) * (273 / 10),
+                      cmap=cmap,
+                      zorder=0,
+                      levels=[-0.55,-0.45,-0.35,-0.25,-0.15,-0.05,0.05,0.15,0.25,0.35,0.45,0.55],
+                      extend='both')
+        cbar = fig.colorbar(c, ax=ax, ticks=[-0.5,-0.4,-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5])
+
+        # [-0.3,-0.2,-0.1,0,0.1,0.2,0.3]
+        # [-0.25,-0.15,-0.05,0.05,0.15,0.25]
+        '''
+
+        fig.colorbar(c, ax=ax, extend='both')
+
+        # streamplot
+        if showStreamPlot:
+            sp = ax.streamplot(
+                middleZ(meta.X[::skip], showSpongeLayer),
+                meta.Z[::skip],
+                middleX(inp.u[::skip,::skip],  showSpongeLayer),
+                middleX(inp.w[::skip,::skip],  showSpongeLayer),
+                color='k',
+                arrowsize=1,
+                density=0.5,
+                linewidth=0.5,
+                zorder=1)
+
+
+        # plot alpha as a green dotted line (plotted as a percentage of the total depth)
+        ax.plot(
+            meta.x[0, :],
+            meta.D * meta.spongeAlphaVectorized(meta.x[0, :]) / meta.spongeStrength,
+            'k:', linewidth=0.75)
+
+
+        timeString = time.strftime('%H:%M.%S', time.gmtime(inp.t))
+        plt.title(f't = {timeString}s')
+
+        #  save figure
+
+        plt.xlim([0, np.max(meta.X)])
+        plt.ylim([0, np.max(meta.Z)])
+
+        fig.tight_layout()
+        #plt.savefig(f'../data/{directory}/run_{"0" * (len(str(len(dataArray))) - len(str(i)))}{i}.jpg')
+        plt.savefig(f'../data/{directory}/{i}.jpg')
+
+        if i == 0:
+          plt.show()
+
+
+        plt.cla()
+        plt.close(fig)
