@@ -99,7 +99,7 @@ def animation(dataArray:       np.array,
               maxValue:        float   = 0.3,
               showSpongeLayer: bool    = False,
               showStreamPlot:  bool    = False,
-              cmapDivisions:   int     = 31,
+              cmapDivisions:   int     = 20,
               skip:            int     = 2,
               directory:       string  = 'test'):
 
@@ -132,17 +132,33 @@ def animation(dataArray:       np.array,
             mpl.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
 
 
+        from matplotlib.cm import ScalarMappable
+        level_boundaries = np.linspace(-maxValue, maxValue, cmapDivisions + 1)
+
+
         # convert data using provided converter
         # this turns our 1D data into 2D by adding z-dep
         inp = converter(data, meta)
         # colour plot
-        c = ax.pcolor(middleX(x, showSpongeLayer),
+        '''c = ax.pcolormesh(middleX(x, showSpongeLayer),
                       middleX(z, showSpongeLayer),
                       middleX(inp.b[::skip,::skip],  showSpongeLayer) * (273 / 10),
                       cmap=cmap,
                       zorder=0,
-                      norm=divnorm)
-        fig.colorbar(c, ax=ax)
+                      norm=divnorm,
+                      shading='auto')'''
+        c = ax.contourf(
+                      middleX(x, showSpongeLayer),
+                      middleX(z, showSpongeLayer),
+                      middleX(inp.b[::skip,::skip],  showSpongeLayer) * (273 / 10),
+                      cmap=cmap,
+                      zorder=0,
+                      levels=[-0.55,-0.45,-0.35,-0.25,-0.15,-0.05,0.05,0.15,0.25,0.35,0.45,0.55],
+                      extend='both')
+        cbar = fig.colorbar(c, ax=ax, ticks=[-0.5,-0.4,-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5])
+
+        # [-0.3,-0.2,-0.1,0,0.1,0.2,0.3]
+        # [-0.25,-0.15,-0.05,0.05,0.15,0.25]
 
         # streamplot
         if showStreamPlot:
@@ -165,12 +181,20 @@ def animation(dataArray:       np.array,
             'k:', linewidth=0.75)
 
 
-        timeString = time.strftime('%H:%M:%S', time.gmtime(inp.t))
-        plt.title(f't = {timeString}')
+        timeString = time.strftime('%H:%M.%S', time.gmtime(inp.t))
+        plt.title(f't = {timeString}s')
 
         #  save figure
+
+        plt.xlim([0, np.max(meta.X)])
+        plt.ylim([0, np.max(meta.Z)])
+
         fig.tight_layout()
         plt.savefig(f'../data/{directory}/run_{"0" * (len(str(len(dataArray))) - len(str(i)))}{i}.png')
+
+        if i == 0:
+          plt.show()
+
 
         plt.cla()
         plt.close(fig)
