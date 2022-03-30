@@ -77,20 +77,20 @@ class Meta:
         
         self.W = self.width * 1000
         self.D = self.depth * 1000
-        D = self.D
+        D =  s
 
         # check if shallow or deep atmosphere
         if self.h == 0:
             print(f'Shallow atmosphere!')
             self.c_max = (self.N * D) / pi
             
-            self.c_squared = lambda j : (((self.N * D) ** 2) / (((j * pi) ** 2)))
+            c_squared = lambda j : (((self.N * D) ** 2) / (((j * pi) ** 2)))
 
         else:
             print(f'Deep atmosphere!')
             self.c_max = sqrt(((self.N * D) ** 2) / (((pi) ** 2) + ((D ** 2)/(4 * ((self.h * 1000) ** 2)))))
 
-            self.c_squared = lambda j : (((self.N * D) ** 2) / (((j * pi) ** 2) + ((D ** 2)/(4 * ((self.h * 1000) ** 2)))))
+            c_squared = lambda j : (((self.N * D) ** 2) / (((j * pi) ** 2) + ((D ** 2)/(4 * ((self.h * 1000) ** 2)))))
 
         # check if using a sponge layer
         if (self.sponge == 0) and (self.damping == 0):
@@ -139,9 +139,9 @@ class Meta:
         W = self.W
         D = self.D
 
-        A_rotation = np.eye(self.spacesteps) * (self.f**2) * (self.dt ** 2) / 4
-        
-        A_bulk = np.array([(A_rotation - (self.c_squared(j) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
+
+        A_rotation = np.eye(self.spacesteps) * ((self.f**2) * (self.dt ** 2) / 4)
+        A_bulk = np.array([(A_rotation - (c_squared(j) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
 
 
         self.A = np.array([np.eye(self.spacesteps)] * len(A_bulk), dtype='float64')
@@ -164,5 +164,25 @@ class Meta:
             self.A[a] += A_bulk[a]
             self.B[a] -= A_bulk[a]
 
-            #print(f'Alpha: {np.min(alphas)}, {np.max(alphas)/self.spongeStrength}')
+            print(f'Alpha: {np.min(alphas)}, {np.max(alphas)/spongeStrength}')
         self.Ainv = np.array([np.linalg.inv(A) for A in self.A], dtype='float64')
+
+
+
+
+    def spongeAlphaVectorized(self, xs):
+        x = np.copy(xs)
+        for i in range(len(x)):
+            x[i] = self.spongeAlpha(x[i])
+
+        return x
+
+    def spongeAlpha(self, x):
+        al = 0
+        if ((self.W / 2) * (1 - self.sponge)) < abs(x):
+            # then we are within the sponge layer
+            # al = (2 / (self.W * self.sponge)) * (abs(x) - ((self.W / 2) * (1 - self.sponge)))
+            val = (abs(x) - ((self.W / 2) * (1 - self.sponge)))
+            al = np.sin(0.5 * np.pi * val / ((self.W / 2) * self.sponge)) ** 2
+                
+        return self.spongeStrength * (al)
