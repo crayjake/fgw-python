@@ -140,7 +140,8 @@ def animation(dataArray:       np.array,
         # this turns our 1D data into 2D by adding z-dep
         inp = converter(data, meta)
 
-        levels = [i * 25 / 1000 for i in list(range(-23, 24))]
+        levels = [i for i in list(range(24))]
+        levels = [((i - (levels[-1]/2)) / 20) for i in levels]
         # colour plot
         '''c = ax.pcolormesh(middleX(x, showSpongeLayer),
                       middleX(z, showSpongeLayer),
@@ -184,8 +185,9 @@ def animation(dataArray:       np.array,
             'k:', linewidth=0.75)
 
 
-        timeString = time.strftime('%H:%M.%S', time.gmtime(inp.t))
-        plt.title(f't = {timeString}s')
+        m, s = divmod(inp.t, 60)
+        h, m = divmod(m, 60)
+        plt.title(f't = {"0" * (2 - len(str(h)))}{h}:{m}')
 
         #  save figure
 
