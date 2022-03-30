@@ -139,6 +139,8 @@ def animation(dataArray:       np.array,
         # convert data using provided converter
         # this turns our 1D data into 2D by adding z-dep
         inp = converter(data, meta)
+
+        levels = [i * 25 / 1000 for i in list(range(-23, 24))]
         # colour plot
         '''c = ax.pcolormesh(middleX(x, showSpongeLayer),
                       middleX(z, showSpongeLayer),
@@ -153,9 +155,10 @@ def animation(dataArray:       np.array,
                       middleX(inp.b[::skip,::skip],  showSpongeLayer) * (273 / 10),
                       cmap=cmap,
                       zorder=0,
-                      levels=[-0.55,-0.45,-0.35,-0.25,-0.15,-0.05,0.05,0.15,0.25,0.35,0.45,0.55],
+                      levels=levels,
                       extend='both')
         cbar = fig.colorbar(c, ax=ax, ticks=[-0.5,-0.4,-0.3,-0.2,-0.1,0,0.1,0.2,0.3,0.4,0.5])
+
 
         # [-0.3,-0.2,-0.1,0,0.1,0.2,0.3]
         # [-0.25,-0.15,-0.05,0.05,0.15,0.25]
