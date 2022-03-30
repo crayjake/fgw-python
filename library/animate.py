@@ -200,8 +200,8 @@ def animation(dataArray:       np.array,
         fig.tight_layout()
         plt.savefig(f'data/{directory}/run_{"0" * (len(str(len(dataArray))) - len(str(i)))}{i}.png')
 
-        if i == 0:
-          plt.show()
+        #if i == 0:
+          #plt.show()
 
 
         plt.cla()
