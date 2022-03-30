@@ -77,7 +77,7 @@ class Meta:
         
         self.W = self.width * 1000
         self.D = self.depth * 1000
-        D =  s
+        D =  self.D
 
         # check if shallow or deep atmosphere
         if self.h == 0:
