@@ -198,7 +198,7 @@ def animation(dataArray:       np.array,
         plt.ylim([0, np.max(meta.Z)])
 
         fig.tight_layout()
-        plt.savefig(f'data/{directory}/run_{"0" * (len(str(len(dataArray))) - len(str(i)))}{i}.png')
+        plt.savefig(f'data/{directory}/{i}.jpg')
 
         #if i == 0:
           #plt.show()
