@@ -187,7 +187,7 @@ def animation(dataArray:       np.array,
 
         m, s = divmod(inp.t, 60)
         h, m = divmod(m, 60)
-        plt.title(f't = {"0" * (2 - len(str(h)))}{h}:{m}')
+        plt.title(f't = {h}:{"0" * (2 - len(str(m)))}{m}')
 
         #  save figure
 
