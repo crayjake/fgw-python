@@ -3,7 +3,6 @@
 # GitHub: crayjake/fgw-python
 ''' contains all the data structures '''
 
-from xmlrpc.client import Boolean
 import numpy as np
 
 from dataclasses import dataclass
@@ -58,10 +57,10 @@ class Meta:
     
     saveEvery:      int = 0          # save every 'n' samples
 
-    heatingForm:     Callable[[np.ndarray, int], float] = F
+    heatingForm:    Callable[[np.ndarray, int], float] = F
 
     # generate all the matrices or just use metadata for visualising already simulated data
-    generateData: Boolean = True
+    generateData:   bool = True
 
     # run after dataclass init
     def __post_init__(self):
@@ -140,7 +139,9 @@ class Meta:
         W = self.W
         D = self.D
 
-        A_bulk = np.array([(((self.f**2) * (self.dt ** 2) / 4) - (self.c_squared(j) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
+        A_rotation = np.eye(self.spacesteps) * (self.f**2) * (self.dt ** 2) / 4
+        
+        A_bulk = np.array([(A_rotation - (self.c_squared(j) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
 
 
         self.A = np.array([np.eye(self.spacesteps)] * len(A_bulk), dtype='float64')
@@ -165,92 +166,3 @@ class Meta:
 
             #print(f'Alpha: {np.min(alphas)}, {np.max(alphas)/self.spongeStrength}')
         self.Ainv = np.array([np.linalg.inv(A) for A in self.A], dtype='float64')
-
-
-    # NOTE: if changing to/from sponge/deep then must regenerate matrices
-    def GenerateMatricesTest(self):
-        print(f'Generating finite difference matrices')
-        spacesteps = self.spacesteps
-        D1 = np.zeros((spacesteps, spacesteps), dtype='float64')
-        D2 = np.zeros((spacesteps, spacesteps), dtype='float64')
-
-        cx=0
-        while cx < spacesteps:
-            D1[cx, (cx+1) % spacesteps] =  1
-            D1[cx, (cx-1) % spacesteps] = -1
-
-            D2[cx, (cx-1) % spacesteps] =  1
-            D2[cx, (cx)   % spacesteps] = -2
-            D2[cx, (cx+1) % spacesteps] =  1
-
-            cx = cx + 1
-
-        self.D1 = D1 / (2 * self.dx)
-        self.D2 = D2 / (self.dx ** 2)
-
-        print(f'Generating Crank-Nicolson matrices')
-        # get width and depth in m
-        W = self.width * 1000
-        D = self.depth * 1000
-        self.W = W
-        self.D = D
-
-        self.c_max = 1
-        A_bulk = np.array([((self.dt ** 2) * self.D2 / 4) for j in self.js])
-
-
-        # check if using a sponge layer
-        if (self.sponge == 0) and (self.damping == 0):
-            print(f'Not using a sponge layer')
-            spongeWidth = 0
-            spongeStrength = 0
-            
-
-        else: 
-            print(f'Using a sponge layer')
-            spongeWidth = (W / 2) * self.sponge
-            spongeStrength = self.damping  * (self.c_max / spongeWidth)
-            print(f'DEBUG: spongeStrength: {spongeStrength}')
-            print(f'DEBUG: spongeWidth:    {spongeWidth}')
-            print(f'DEBUG: c_max:          {self.c_max}')
-
-        self.spongeWidth    = spongeWidth
-        self.spongeStrength = spongeStrength
-
-        self.A = np.array([np.eye(self.spacesteps)] * len(A_bulk), dtype='float64')
-        self.B = np.array([np.eye(self.spacesteps)] * len(A_bulk), dtype='float64')
-
-        for a in range(len(A_bulk)):
-            alphas = np.array([])
-            for i in range(self.spacesteps):
-                x = (i - (self.spacesteps / 2)) * (W / self.spacesteps)
-
-                alpha = self.spongeAlpha(x)
-                alphas = np.append(alphas, alpha)
-
-                self.A[a][i][i] = (1 + (self.dt * alpha)) ** 2
-                self.B[a][i][i] = (1 + (self.dt * alpha))
-
-            self.A[a] += A_bulk[a]
-            self.B[a] -= A_bulk[a]
-
-            print(f'Alpha: {np.min(alphas)}, {np.max(alphas)/spongeStrength}')
-        self.Ainv = np.array([np.linalg.inv(A) for A in self.A], dtype='float64')
-
-
-    def spongeAlphaVectorized(self, xs):
-        x = np.copy(xs)
-        for i in range(len(x)):
-            x[i] = self.spongeAlpha(x[i])
-
-        return x
-
-    def spongeAlpha(self, x):
-        al = 0
-        if ((self.W / 2) * (1 - self.sponge)) < abs(x):
-            # then we are within the sponge layer
-            # al = (2 / (self.W * self.sponge)) * (abs(x) - ((self.W / 2) * (1 - self.sponge)))
-            val = (abs(x) - ((self.W / 2) * (1 - self.sponge)))
-            al = np.sin(0.5 * np.pi * val / ((self.W / 2) * self.sponge)) ** 2
-                
-        return self.spongeStrength * (al)
