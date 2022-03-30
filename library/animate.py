@@ -117,8 +117,8 @@ def animation(dataArray:       np.array,
     x = meta.x[::skip, ::skip]
     z = meta.z[::skip, ::skip]
 
-    if not os.path.exists(f'../data/{directory}'):
-        os.makedirs(f'../data/{directory}')
+    if not os.path.exists(f'data/{directory}'):
+        os.makedirs(f'data/{directory}')
 
 
     for i in tqdm.tqdm(range(len(dataArray))):
@@ -193,7 +193,7 @@ def animation(dataArray:       np.array,
         plt.ylim([0, np.max(meta.Z)])
 
         fig.tight_layout()
-        plt.savefig(f'../data/{directory}/run_{"0" * (len(str(len(dataArray))) - len(str(i)))}{i}.png')
+        plt.savefig(f'data/{directory}/run_{"0" * (len(str(len(dataArray))) - len(str(i)))}{i}.png')
 
         if i == 0:
           plt.show()
