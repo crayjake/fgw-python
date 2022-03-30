@@ -101,18 +101,11 @@ def animation(dataArray:       np.array,
               showStreamPlot:  bool    = False,
               cmapDivisions:   int     = 20,
               skip:            int     = 2,
-              directory:       string  = 'test'):
+              directory:       string  = 'test',
+              contour:         bool    = True # determines if we use contour plot with the fixed colourbar or if we use pcolormesh with dynamic colour bar (useful for single mode plots)
+              ):
 
     print(f'Starting animation: {directory}')
-
-    # find max value and set up colour bar
-    #maxValue = max(np.max(inp.b), -np.min(inp.b))
-    #maxValue = 8e-8
-    divnorm = colors.TwoSlopeNorm(vmin=-maxValue, vcenter=0, vmax=maxValue)
-
-    # set up colour map to have 31 discrete values
-    cmap = plt.get_cmap('bwr', cmapDivisions)
-    #cmap = 'bwr'
 
     x = meta.x[::skip, ::skip]
     z = meta.z[::skip, ::skip]
@@ -120,6 +113,21 @@ def animation(dataArray:       np.array,
     if not os.path.exists(f'data/{directory}'):
         os.makedirs(f'data/{directory}')
 
+
+    if not contour:
+        # find max value and set up colour bar
+        inp = converter(dataArray[5], meta)
+        maxValue = max(np.max(inp.b), -np.min(inp.b))
+        if maxValue == 0:
+            maxValue = 0.3
+        else:
+            maxValue *= 1.5
+        #maxValue = 8e-8
+        divnorm = colors.TwoSlopeNorm(vmin=-maxValue, vcenter=0, vmax=maxValue)
+
+        # set up colour map to have 31 discrete values
+        cmap = plt.get_cmap('bwr', cmapDivisions)
+        #cmap = 'bwr'
 
     for i in tqdm.tqdm(range(len(dataArray))):
         data = dataArray[i]
@@ -146,22 +154,26 @@ def animation(dataArray:       np.array,
         levels = [((i - (levels[-1]/2)) / 30) for i in levels]
 
         # colour plot
-        '''c = ax.pcolormesh(middleX(x, showSpongeLayer),
+        if not contour:
+            c = ax.pcolormesh(middleX(x, showSpongeLayer),
                       middleX(z, showSpongeLayer),
                       middleX(inp.b[::skip,::skip],  showSpongeLayer) * (273 / 10),
                       cmap=cmap,
                       zorder=0,
                       norm=divnorm,
-                      shading='auto')'''
-        c = ax.contourf(
+                      shading='auto')
+            cbar = fig.colorbar(c, ax=ax)#, ticks=[-0.3,-0.2,-0.1,0,0.1,0.2,0.3])
+
+        else:
+            c = ax.contourf(
                       middleX(x, showSpongeLayer),
                       middleX(z, showSpongeLayer),
                       middleX(inp.b[::skip,::skip],  showSpongeLayer) * (273 / 10),
-                      cmap=cmap,
+                      cmap='bwr',
                       zorder=0,
                       levels=levels,
                       extend='both')
-        cbar = fig.colorbar(c, ax=ax, ticks=[-0.3,-0.2,-0.1,0,0.1,0.2,0.3])
+            cbar = fig.colorbar(c, ax=ax, ticks=[-0.3,-0.2,-0.1,0,0.1,0.2,0.3])
 
 
         # [-0.3,-0.2,-0.1,0,0.1,0.2,0.3]
@@ -206,5 +218,3 @@ def animation(dataArray:       np.array,
 
         plt.cla()
         plt.close(fig)
-
-

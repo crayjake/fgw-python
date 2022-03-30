@@ -161,7 +161,7 @@ class Meta:
             self.A[a] += A_bulk[a]
             self.B[a] -= A_bulk[a]
 
-            print(f'Alpha: {np.min(alphas)}, {np.max(alphas)/self.spongeStrength}')
+            #print(f'Alpha: {np.min(alphas)}, {np.max(alphas)/self.spongeStrength}')
         self.Ainv = np.array([np.linalg.inv(A) for A in self.A], dtype='float64')
 
 
