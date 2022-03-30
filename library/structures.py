@@ -98,7 +98,6 @@ class Meta:
         self.D1 = D1 / (2 * self.dx)
         self.D2 = D2 / (self.dx ** 2)
 
-        print(f'Generating Crank-Nicolson matrices')
         # get width and depth in m
         W = self.W
         D = self.D
@@ -125,12 +124,9 @@ class Meta:
             
 
         else: 
-            print(f'Using a sponge layer')
+            print(f'Setting up sponge layer')
             spongeWidth = (W / 2) * self.sponge
             spongeStrength = self.damping * (self.c_max / spongeWidth)
-            print(f'DEBUG: spongeStrength: {spongeStrength}')
-            print(f'DEBUG: spongeWidth:    {spongeWidth}')
-            print(f'DEBUG: c_max:          {self.c_max}')
 
         self.spongeWidth    = spongeWidth
         self.spongeStrength = spongeStrength
@@ -141,6 +137,7 @@ class Meta:
 
     # NOTE: if changing to/from sponge/deep then must regenerate matrices
     def GenerateData(self):
+        print(f'Generating coefficient matrices')
         A_rotation = np.eye(self.spacesteps) * ((self.f**2) * (self.dt ** 2) / 4)
         A_bulk = np.array([(A_rotation - (self.c_squared(j) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
 

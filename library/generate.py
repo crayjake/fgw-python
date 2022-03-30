@@ -9,6 +9,7 @@ from structures import *
 from typing import Callable
 
 def generate(meta: Meta, step: Callable[[State, int], State]):
+    print(f'Generating data...')
     output = np.array([])
 
     empty = np.array([np.zeros(meta.x.shape[1], dtype='float64')] * len(meta.js))

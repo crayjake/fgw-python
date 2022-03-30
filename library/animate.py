@@ -103,7 +103,7 @@ def animation(dataArray:       np.array,
               skip:            int     = 2,
               directory:       string  = 'test'):
 
-
+    print(f'Starting animation: {directory}')
 
     # find max value and set up colour bar
     #maxValue = max(np.max(inp.b), -np.min(inp.b))
