@@ -102,6 +102,7 @@ def animation(dataArray:       np.array,
               cmapDivisions:   int     = 20,
               skip:            int     = 2,
               directory:       string  = 'test',
+              oneSides:        bool    = True
               ):
 
     print(f'Starting animation: {directory}')
@@ -174,8 +175,10 @@ def animation(dataArray:       np.array,
 
         #  save figure
 
-        #plt.xlim([0, np.max(meta.X)])
-        plt.xlim([np.min(meta.X), np.max(meta.X)])
+        if oneSided:
+            plt.xlim([0, np.max(meta.X)])
+        else:
+            plt.xlim([np.min(meta.X), np.max(meta.X)])
         plt.ylim([0, np.max(meta.Z)])
 
         fig.tight_layout()
