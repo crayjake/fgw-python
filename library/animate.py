@@ -102,7 +102,7 @@ def animation(dataArray:       np.array,
               cmapDivisions:   int     = 20,
               skip:            int     = 2,
               directory:       string  = 'test',
-              oneSides:        bool    = True
+              oneSided:        bool    = True
               ):
 
     print(f'Starting animation: {directory}')
