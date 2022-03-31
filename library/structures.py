@@ -66,32 +66,38 @@ class Meta:
     # run after dataclass init
     def __post_init__(self):
         print(f'Starting metadata generation')
-        self.dx = int(1000 * self.width / self.spacesteps)
-        self.dz = int(1000 * self.depth / self.spacesteps)
+        self.dx = 50
+        self.dz = 200
+        #self.dx = int(1000 * self.width / self.spacesteps)
+        #self.dz = int(1000 * self.depth / self.spacesteps)
+
+        self.h_spacesteps = int(1000 * self.width / self.dx)
+        self.v_spacesteps = int(1000 * self.depth / self.dz)
 
         self.timesteps = ceil(self.time / self.dt)
 
         print(f'Setting up the space')
-        self.X = 1000 * np.linspace(- self.width / 2, self.width / 2, self.spacesteps, endpoint = False)
-        self.Z = 1000 * np.linspace(0, self.depth, self.spacesteps, endpoint = True)
+        self.X = 1000 * np.linspace(- self.width / 2, self.width / 2, self.h_spacesteps, endpoint = False)
+        self.Z = 1000 * np.linspace(0, self.depth, self.v_spacesteps, endpoint = True)
         self.x, self.z = np.meshgrid(self.X, self.Z)
         
         self.W = self.width * 1000
         self.D = self.depth * 1000
 
         print(f'Generating finite difference matrices')
-        spacesteps = self.spacesteps
-        D1 = np.zeros((spacesteps, spacesteps), dtype='float64')
-        D2 = np.zeros((spacesteps, spacesteps), dtype='float64')
+        #spacesteps = self.spacesteps
+        h_spacesteps = self.h_spacesteps
+        D1 = np.zeros((h_spacesteps, h_spacesteps), dtype='float64')
+        D2 = np.zeros((h_spacesteps, h_spacesteps), dtype='float64')
 
         cx=0
-        while cx < spacesteps:
-            D1[cx, (cx+1) % spacesteps] =  1
-            D1[cx, (cx-1) % spacesteps] = -1
+        while cx < h_spacesteps:
+            D1[cx, (cx+1) % h_spacesteps] =  1
+            D1[cx, (cx-1) % h_spacesteps] = -1
 
-            D2[cx, (cx-1) % spacesteps] =  1
-            D2[cx, (cx)   % spacesteps] = -2
-            D2[cx, (cx+1) % spacesteps] =  1
+            D2[cx, (cx-1) % h_spacesteps] =  1
+            D2[cx, (cx)   % h_spacesteps] = -2
+            D2[cx, (cx+1) % h_spacesteps] =  1
 
             cx = cx + 1
 
@@ -126,7 +132,9 @@ class Meta:
         else: 
             print(f'Setting up sponge layer')
             spongeWidth = (W / 2) * self.sponge
-            spongeStrength = self.damping * (self.c_max / spongeWidth)
+            timeInSponge = spongeWidth / self.c_max
+            theoryTimeInSponge = timeInSponge / self.dt
+            spongeStrength = self.damping / timeInSponge
 
         self.spongeWidth    = spongeWidth
         self.spongeStrength = spongeStrength
@@ -138,16 +146,16 @@ class Meta:
     # NOTE: if changing to/from sponge/deep then must regenerate matrices
     def GenerateData(self):
         print(f'Generating coefficient matrices')
-        A_rotation = np.eye(self.spacesteps) * ((self.f**2) * (self.dt ** 2) / 4)
+        A_rotation = np.eye(self.h_spacesteps) * ((self.f**2) * (self.dt ** 2) / 4)
         A_bulk = np.array([(A_rotation - (self.c_squared(j) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
 
-        self.A = np.array([np.eye(self.spacesteps)] * len(A_bulk), dtype='float64')
-        self.B = np.array([np.eye(self.spacesteps)] * len(A_bulk), dtype='float64')
+        self.A = np.array([np.eye(self.h_spacesteps)] * len(A_bulk), dtype='float64')
+        self.B = np.array([np.eye(self.h_spacesteps)] * len(A_bulk), dtype='float64')
 
         for a in range(len(A_bulk)):
             alphas = np.array([])
-            for i in range(self.spacesteps):
-                x = (i - (self.spacesteps / 2)) * (self.W / self.spacesteps)
+            for i in range(self.h_spacesteps):
+                x = (i - (self.h_spacesteps / 2)) * (self.W / self.h_spacesteps)
 
                 alpha = self.spongeAlpha(x)
                 alphas = np.append(alphas, alpha)

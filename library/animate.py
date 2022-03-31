@@ -133,7 +133,7 @@ def animation(dataArray:       np.array,
         levels = [maxValue * i / levels[-1] for i in levels]
 
         ticks = [-0.3,-0.2,-0.1,0,0.1,0.2,0.3]
-        ticks = [float('%.1g' % (maxValue * i / 0.3)) for i in ticks]
+        ticks = [float('%.2g' % (maxValue * i / 0.3)) for i in ticks]
 
         # colour plot
         c = ax.contourf(
@@ -174,7 +174,8 @@ def animation(dataArray:       np.array,
 
         #  save figure
 
-        plt.xlim([0, np.max(meta.X)])
+        #plt.xlim([0, np.max(meta.X)])
+        plt.xlim([np.min(meta.X), np.max(meta.X)])
         plt.ylim([0, np.max(meta.Z)])
 
         fig.tight_layout()
