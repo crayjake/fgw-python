@@ -44,7 +44,7 @@ class Meta:
     T:              int = 1e10       # time of pulsed heating         - s
     dt:             float = 10       # time step for the simulation   - s
         
-    spacesteps:     int = 1000       # spatial resolution
+    spacesteps:     int = 750       # spatial resolution
     
     D_t:            int = 10         # height of troposphere if deep  - km
     L:              int = 10         # horizontal scale of heating    - km
@@ -66,10 +66,10 @@ class Meta:
     # run after dataclass init
     def __post_init__(self):
         print(f'Starting metadata generation')
-        self.dx = 50
-        self.dz = 200
-        #self.dx = int(1000 * self.width / self.spacesteps)
-        #self.dz = int(1000 * self.depth / self.spacesteps)
+        #self.dx = 300
+        #self.dz = 200
+        self.dx = int(1000 * self.width / self.spacesteps)
+        self.dz = int(1000 * self.depth / self.spacesteps)
 
         self.h_spacesteps = int(1000 * self.width / self.dx)
         self.v_spacesteps = int(1000 * self.depth / self.dz)
@@ -147,30 +147,32 @@ class Meta:
     def GenerateData(self):
         print(f'Generating coefficient matrices')
         A_rotation = np.eye(self.h_spacesteps) * ((self.f**2) * (self.dt ** 2) / 4)
-        A_bulk = np.array([(A_rotation - (self.c_squared(j) * (self.dt ** 2) * self.D2 / 4)) for j in self.js])
+        self.A_bulk = lambda j: (A_rotation - (self.c_squared(j) * (self.dt ** 2) * self.D2 / 4))
 
-        self.A = np.array([np.eye(self.h_spacesteps)] * len(A_bulk), dtype='float64')
-        self.B = np.array([np.eye(self.h_spacesteps)] * len(A_bulk), dtype='float64')
+        self.A_val = np.zeros((self.h_spacesteps, self.h_spacesteps))
+        self.B_val = np.zeros((self.h_spacesteps, self.h_spacesteps))
+        
+        for i in range(self.h_spacesteps):
+            x = (i - (self.h_spacesteps / 2)) * (self.W / self.h_spacesteps)
+            alpha = self.spongeAlpha(x)
+            
+            self.A_val[i][i] = (1 + self.dt * alpha) ** 2
+            self.B_val[i][i] = (1 + self.dt * alpha) ** 1
 
-        for a in range(len(A_bulk)):
-            alphas = np.array([])
-            for i in range(self.h_spacesteps):
-                x = (i - (self.h_spacesteps / 2)) * (self.W / self.h_spacesteps)
-
-                alpha = self.spongeAlpha(x)
-                alphas = np.append(alphas, alpha)
+        self.A = lambda j: self.A_val + self.A_bulk(j)
+        self.B = lambda j: self.B_val - self.A_bulk(j)
 
 
-                #self.A[a][i][i] *= (1 + self.dt * alpha) ** 2
-                #self.B[a][i][i] *= (1 +self.dt * alpha)
-                self.A[a][i][i] = (1 + self.dt * alpha) ** 2
-                self.B[a][i][i] = (1 + self.dt * alpha) ** 1
+        self.Ainv = lambda j: np.linalg.inv(self.A(j))
 
-            self.A[a] += A_bulk[a]
-            self.B[a] -= A_bulk[a]
 
-            #print(f'Alpha: {np.min(alphas)}, {np.max(alphas)/self.spongeStrength}')
-        self.Ainv = np.array([np.linalg.inv(A) for A in self.A], dtype='float64')
+    def A(self, j):
+        A = np.zeros(self.h_spacesteps, self.h_spacesteps)
+        for i in range(self.h_spacesteps):
+            x = (i - (self.h_spacesteps / 2)) * (self.W / self.h_spacesteps)
+            alpha = self.spongeAlpha(x)
+            self.A[i][i] = (1 + self.dt * alpha) ** 2
+
 
 
     def spongeAlphaVectorized(self, xs):

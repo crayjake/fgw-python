@@ -10,10 +10,10 @@ from math import sqrt
 from structures import *
 from helpers import H
 
-def CrankNicolsonDeep(meta: Meta, inp: State, i: int) -> State:
+def CrankNicolsonDeep(meta: Meta, inp: State, i: int, Ainv: np.ndarray, B: np.ndarray) -> State:
     # matrices
-    Ainv = meta.Ainv[i]
-    B = meta.B[i]
+    #Ainv = meta.Ainv(i)
+    #B = meta.B(i)
     D1 = meta.D1
     D2 = meta.D2
 
