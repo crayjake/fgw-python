@@ -66,10 +66,10 @@ class Meta:
     # run after dataclass init
     def __post_init__(self):
         print(f'Starting metadata generation')
-        self.dx = 50
-        self.dz = 200
-        #self.dx = int(1000 * self.width / self.spacesteps)
-        #self.dz = int(1000 * self.depth / self.spacesteps)
+        #self.dx = 50
+        #self.dz = 200
+        self.dx = int(1000 * self.width / self.spacesteps)
+        self.dz = int(1000 * self.depth / self.spacesteps)
 
         self.h_spacesteps = int(1000 * self.width / self.dx)
         self.v_spacesteps = int(1000 * self.depth / self.dz)
