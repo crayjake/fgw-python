@@ -265,7 +265,7 @@ def plotAxes(ax, x, z, data, meta, converter, levels, showStreamPlot, showSponge
 
     m, s = divmod(inp.t, 60)
     h, m = divmod(m, 60)
-    ax.legend(f't = {h}:{"0" * (2 - len(str(m)))}{m}', loc='upper left')
+    ax.legend(title=f't = {h}:{"0" * (2 - len(str(m)))}{m}', loc='upper left', labelspacing=0)
 
 
 
@@ -314,7 +314,7 @@ def plotGroup(leftData:        np.array,
 
         #ax, x, z, data, meta, converter, levels, showStreamPlot, skip
         c = plotAxes(lax, x, z, left, meta, converter, levels, showStreamPlot, showSpongeLayer, skip)
-        c = plotAxes(rax, x, z, left, meta, converter, levels, showStreamPlot, showSpongeLayer, skip)
+        c = plotAxes(rax, x, z, right, meta, converter, levels, showStreamPlot, showSpongeLayer, skip)
 
         #  save figure
 
