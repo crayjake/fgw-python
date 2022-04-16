@@ -11,21 +11,18 @@ import numpy as np
 
 from typing import Callable
 from matplotlib import colors
-from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
+import matplotlib.pyplot as plt
 
 # plt.rcParams['pcolor.shading'] = 'nearest'
 import matplotlib as mpl
-
 mpl.rcParams['figure.dpi'] = 250
-
-plt.style.use('seaborn-pastel')
 
 import tqdm
 
-
+from math import sqrt
 from helpers import middleX, middleZ
 from structures import State, Meta
+from converters import phi, phiPrime, rhoZero
 
 def display(data:            State,
             meta:            Meta,
@@ -53,7 +50,7 @@ def display(data:            State,
     # colour plot
     c = ax.pcolor(middleX(meta.x, showSpongeLayer),
                   middleX(meta.z, showSpongeLayer),
-                  middleX(inp.b,  showSpongeLayer) * (273 / 10),
+                  middleX(inp.v,  showSpongeLayer) * (273 / 10),
                   cmap=cmap,
                   zorder=0,
                   norm=divnorm)
@@ -138,9 +135,9 @@ def animation(dataArray:       np.array,
 
         # colour plot
         c = ax.contourf(
-                      middleX(x, showSpongeLayer),
-                      middleX(z, showSpongeLayer),
-                      middleX(inp.b[::skip,::skip],  showSpongeLayer) * (273 / 10),
+                      x,
+                      z,
+                      inp.b[::skip,::skip] * (273 / 10),
                       cmap='bwr',
                       zorder=0,
                       levels=levels,
@@ -150,23 +147,35 @@ def animation(dataArray:       np.array,
 
         # streamplot
         if showStreamPlot:
-            sp = ax.streamplot(
-                middleZ(meta.X[::skip], showSpongeLayer),
+            U = inp.u[::skip,::skip]
+            W = inp.w[::skip,::skip]
+
+            magnitude = U ** 2 + W ** 2
+
+            U = np.where(magnitude > 0.001 * np.max(magnitude), U, np.zeros(U.shape))
+            W = np.where(magnitude > 0.001 * np.max(magnitude), W, np.zeros(W.shape))
+
+
+            stream = ax.streamplot(
+                meta.X[::skip],
                 meta.Z[::skip],
-                middleX(inp.u[::skip,::skip],  showSpongeLayer),
-                middleX(inp.w[::skip,::skip],  showSpongeLayer),
+                U,
+                W,
                 color='k',
-                arrowsize=1,
-                density=0.5,
-                linewidth=0.5,
-                zorder=1)
+                #norm = divnorm,
+                #cmap = plt.get_cmap('bwr', 21),
+                linewidth = 1,
+                arrowsize = 1,
+                density = 1
+            )
 
 
         # plot alpha as a green dotted line (plotted as a percentage of the total depth)
-        ax.plot(
-            meta.x[0, :],
-            meta.D * meta.spongeAlphaVectorized(meta.x[0, :]) / meta.spongeStrength,
-            'k:', linewidth=0.75)
+        if showSpongeLayer:
+            ax.plot(
+                meta.x[0, :],
+                meta.D * meta.spongeAlphaVectorized(meta.x[0, :]) / meta.spongeStrength,
+                'k:', linewidth=1)
 
 
         m, s = divmod(inp.t, 60)
@@ -175,10 +184,11 @@ def animation(dataArray:       np.array,
 
         #  save figure
 
+        spongeWidth = 0 if showSpongeLayer else meta.spongeWidth
         if oneSided:
-            plt.xlim([0, np.max(meta.X)])
+            plt.xlim([0, np.max(meta.X) - spongeWidth])
         else:
-            plt.xlim([np.min(meta.X), np.max(meta.X)])
+            plt.xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
         plt.ylim([0, np.max(meta.Z)])
 
         fig.tight_layout()
@@ -190,3 +200,136 @@ def animation(dataArray:       np.array,
 
         plt.cla()
         plt.close(fig)
+
+
+
+def plotAxes(ax, x, z, data, meta, converter, levels, showStreamPlot, showSpongeLayer, skip):
+     # add colour bar and format plot
+    ax.get_xaxis().set_major_formatter(
+        mpl.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
+    ax.get_yaxis().set_major_formatter(
+        mpl.ticker.FuncFormatter(lambda x, p: format(int(x / 1000), ',')))
+
+
+    # convert data using provided converter
+    # this turns our 1D data into 2D by adding z-dep
+    inp = converter(data, meta)
+
+    
+    # colour plot
+    c = ax.contourf(
+                    x,
+                    z,
+                    inp.b[::skip,::skip] * (273 / 10),
+                    cmap='bwr',
+                    zorder=0,
+                    levels=levels,
+                    extend='both')
+
+
+
+
+
+    # streamplot
+    if showStreamPlot:
+        U = inp.u[::skip,::skip]
+        W = inp.w[::skip,::skip]
+
+        magnitude = U ** 2 + W ** 2
+
+        U = np.where(magnitude > 0.001 * np.max(magnitude), U, np.zeros(U.shape))
+        W = np.where(magnitude > 0.001 * np.max(magnitude), W, np.zeros(W.shape))
+
+
+        stream = ax.streamplot(
+            meta.X[::skip],
+            meta.Z[::skip],
+            U,
+            W,
+            color='k',
+            #norm = divnorm,
+            #cmap = plt.get_cmap('bwr', 21),
+            linewidth = 1,
+            arrowsize = 1,
+            density = 1
+        )
+
+
+    # plot alpha as a green dotted line (plotted as a percentage of the total depth)
+    if showSpongeLayer:
+        ax.plot(
+            meta.x[0, :],
+            meta.D * meta.spongeAlphaVectorized(meta.x[0, :]) / meta.spongeStrength,
+            'k:', linewidth=1)
+
+
+    m, s = divmod(inp.t, 60)
+    h, m = divmod(m, 60)
+    ax.legend(f't = {h}:{"0" * (2 - len(str(m)))}{m}', loc='upper left')
+
+
+
+# plots a set of images, left and right
+def plotGroup(leftData:        np.array,
+              rightData:       np.array,
+              meta:            Meta,
+              converter:       Callable[[np.ndarray, Meta], np.ndarray],
+              maxValue:        float   = 0.3,
+              showSpongeLayer: bool    = False,
+              showStreamPlot:  bool    = False,
+              cmapDivisions:   int     = 20,
+              skip:            int     = 2,
+              directory:       string  = 'test',
+              oneSided:        bool    = True
+              ):
+
+    print(f'Starting animation: {directory}')
+
+    x = meta.x[::skip, ::skip]
+    z = meta.z[::skip, ::skip]
+
+    if not os.path.exists(f'data/groups'):
+        os.makedirs(f'data/groups')
+
+    height = max(len(leftData), len(rightData))
+    fig, axes = plt.subplots(height, 2)
+
+    leftAxes = axes[:,0]
+    rightAxes = axes[:,1]
+
+    levels = [i for i in list(range(cmapDivisions))]
+    levels = [((i - (levels[-1]/2))) for i in levels]
+    levels = [maxValue * i / levels[-1] for i in levels]
+
+    ticks = [-0.3,-0.2,-0.1,0,0.1,0.2,0.3]
+    ticks = [float('%.2g' % (maxValue * i / 0.3)) for i in ticks]
+
+
+    for i in range(height):
+        left  = leftData[i]
+        right = rightData[i]
+
+        lax = leftAxes[i]
+        rax = rightAxes[i]
+
+        #ax, x, z, data, meta, converter, levels, showStreamPlot, skip
+        c = plotAxes(lax, x, z, left, meta, converter, levels, showStreamPlot, showSpongeLayer, skip)
+        c = plotAxes(rax, x, z, left, meta, converter, levels, showStreamPlot, showSpongeLayer, skip)
+
+        #  save figure
+
+    cbar = fig.colorbar(c, ax=axes.ravel().tolist(), ticks=ticks)
+
+    spongeWidth = 0 if showSpongeLayer else meta.spongeWidth
+    if oneSided:
+        plt.xlim([0, np.max(meta.X) - spongeWidth])
+    else:
+        plt.xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
+    plt.ylim([0, np.max(meta.Z)])
+
+    fig.tight_layout()
+    plt.savefig(f'data/groups/{directory}.jpg')
+
+    #if i == 0:
+        #plt.show()
+

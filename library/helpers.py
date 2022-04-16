@@ -23,7 +23,7 @@ def middleX(arr, showSponge):
     return arr[::,ceil(len(arr)/8):][::,:-ceil(len(arr)/8)]
 
 # gets middle 3/4 of list (1st dim)
-def middleZ(arr, sponge):
+def middleZ(arr, showSponge):
     if showSponge:
         return arr
     return arr[ceil(len(arr)/8):][:-ceil(len(arr)/8)]
