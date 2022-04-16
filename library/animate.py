@@ -296,8 +296,12 @@ def plotGroup(leftData:        np.array,
     height = max(len(leftData), len(rightData))
     fig, axes = plt.subplots(height, 2, sharex=True, sharey=True, figsize=figsize)
 
-    leftAxes = axes[:,0]
-    rightAxes = axes[:,1]
+    if len(axes.shape) == 2:
+        leftAxes = axes[:,0]
+        rightAxes = axes[:,1]
+    else:
+        leftAxes = [axes[0]]
+        rightAxes = [axes[1]]
 
     levels = [i for i in list(range(cmapDivisions))]
     levels = [((i - (levels[-1]/2))) for i in levels]
