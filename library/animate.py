@@ -329,10 +329,11 @@ def plotGroup(leftData:        np.array,
         lax.set_ylim([0, np.max(meta.Z)])
         rax.set_ylim([0, np.max(meta.Z)])
 
-    cbar = fig.colorbar(c, ax=axes.ravel().tolist(), ticks=ticks)
+    # axes.ravel().tolist()
+    cbar = fig.colorbar(c, ax=rax[0], ticks=ticks)
 
     #fig.tight_layout()
-    plt.savefig(f'data/groups/{directory}.jpg')
+    plt.savefig(f'data/groups/{directory}.jpg', bbox_inches = 'tight', pad_inches = 0)
 
     #if i == 0:
         #plt.show()
