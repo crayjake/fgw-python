@@ -281,7 +281,8 @@ def plotGroup(leftData:        np.array,
               cmapDivisions:   int     = 20,
               skip:            int     = 2,
               directory:       string  = 'test',
-              oneSided:        bool    = True
+              oneSided:        bool    = True,
+              figsize = (15,15)
               ):
 
     print(f'Starting animation: {directory}')
@@ -293,7 +294,7 @@ def plotGroup(leftData:        np.array,
         os.makedirs(f'data/groups')
 
     height = max(len(leftData), len(rightData))
-    fig, axes = plt.subplots(height, 2)
+    fig, axes = plt.subplots(height, 2, sharex=True, sharey=True, figsize=figsize)
 
     leftAxes = axes[:,0]
     rightAxes = axes[:,1]
