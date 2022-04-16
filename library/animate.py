@@ -267,6 +267,7 @@ def plotAxes(ax, x, z, data, meta, converter, levels, showStreamPlot, showSponge
     h, m = divmod(m, 60)
     ax.legend(title=f't = {h}:{"0" * (2 - len(str(m)))}{m}', loc='upper left', labelspacing=0)
 
+    return c
 
 
 # plots a set of images, left and right
