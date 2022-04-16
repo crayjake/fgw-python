@@ -320,13 +320,13 @@ def plotGroup(leftData:        np.array,
         #format axes
         spongeWidth = 0 if showSpongeLayer else meta.spongeWidth
         if oneSided:
-            lax.xlim([0, np.max(meta.X) - spongeWidth])
-            rax.xlim([0, np.max(meta.X) - spongeWidth])
+            lax.set_xlim([0, np.max(meta.X) - spongeWidth])
+            rax.set_xlim([0, np.max(meta.X) - spongeWidth])
         else:
-            lax.xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
-            rax.xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
-        lax.ylim([0, np.max(meta.Z)])
-        rax.ylim([0, np.max(meta.Z)])
+            lax.set_xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
+            rax.set_xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
+        lax.set_ylim([0, np.max(meta.Z)])
+        rax.set_ylim([0, np.max(meta.Z)])
 
     cbar = fig.colorbar(c, ax=axes.ravel().tolist(), ticks=ticks)
 
