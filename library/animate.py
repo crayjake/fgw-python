@@ -312,34 +312,40 @@ def plotGroup(leftData:        np.array,
 
 
     for i in range(height):
-        left  = leftData[i]
-        right = rightData[i]
-
         lax = leftAxes[i]
         rax = rightAxes[i]
 
-        #ax, x, z, data, meta, converter, levels, showStreamPlot, skip
-        c = plotAxes(lax, x, z, left, meta, converter, levels, showStreamPlot, showSpongeLayer, skip)
-        c = plotAxes(rax, x, z, right, meta, converter, levels, showStreamPlot, showSpongeLayer, skip)
-
-        #format axes
-        spongeWidth = 0 if showSpongeLayer else meta.spongeWidth
-        if oneSided:
-            lax.set_xlim([0, np.max(meta.X) - spongeWidth])
-            rax.set_xlim([0, np.max(meta.X) - spongeWidth])
+        if i >= len(leftData):
+            lax.axis('off')
         else:
-            lax.set_xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
-            rax.set_xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
-        lax.set_ylim([0, np.max(meta.Z)])
-        rax.set_ylim([0, np.max(meta.Z)])
+            left  = leftData[i]
 
-    # axes.ravel().tolist()
+            c = plotAxes(lax, x, z, left, meta, converter, levels, showStreamPlot, showSpongeLayer, skip)
+            
+            spongeWidth = 0 if showSpongeLayer else meta.spongeWidth
+            if oneSided:
+                lax.set_xlim([0, np.max(meta.X) - spongeWidth])
+            else:
+                lax.set_xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
+            lax.set_ylim([0, np.max(meta.Z)])
+
+        if i >= len(rightData):
+            rax.axis('off')
+        else:
+            right = rightData[i]
+           
+            c = plotAxes(rax, x, z, right, meta, converter, levels, showStreamPlot, showSpongeLayer, skip)
+
+            spongeWidth = 0 if showSpongeLayer else meta.spongeWidth
+            if oneSided:
+                rax.set_xlim([0, np.max(meta.X) - spongeWidth])
+            else:
+                rax.set_xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
+            rax.set_ylim([0, np.max(meta.Z)])
+
 
     fig.tight_layout()
+    # axes.ravel().tolist()
     cbar = fig.colorbar(c, ax=axes.ravel().tolist(), ticks=ticks, location='bottom', shrink=0.5, pad=0.05)
 
     plt.savefig(f'data/groups/{directory}.jpg', bbox_inches = 'tight', pad_inches = 0)
-
-    #if i == 0:
-        #plt.show()
-
