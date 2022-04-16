@@ -330,7 +330,7 @@ def plotGroup(leftData:        np.array,
         rax.set_ylim([0, np.max(meta.Z)])
 
     # axes.ravel().tolist()
-    cbar = fig.colorbar(c, ax=rightAxes[0], ticks=ticks, location='top', orientation='horizontal')
+    cbar = fig.colorbar(c, ax=axes.ravel().tolist(), ticks=ticks, location='top', orientation='horizontal')
 
     fig.tight_layout()
     plt.savefig(f'data/groups/{directory}.jpg', bbox_inches = 'tight', pad_inches = 0)
