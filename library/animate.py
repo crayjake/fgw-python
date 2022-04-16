@@ -317,18 +317,20 @@ def plotGroup(leftData:        np.array,
         c = plotAxes(lax, x, z, left, meta, converter, levels, showStreamPlot, showSpongeLayer, skip)
         c = plotAxes(rax, x, z, right, meta, converter, levels, showStreamPlot, showSpongeLayer, skip)
 
-        #  save figure
+        #format axes
+        spongeWidth = 0 if showSpongeLayer else meta.spongeWidth
+        if oneSided:
+            lax.xlim([0, np.max(meta.X) - spongeWidth])
+            rax.xlim([0, np.max(meta.X) - spongeWidth])
+        else:
+            lax.xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
+            rax.xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
+        lax.ylim([0, np.max(meta.Z)])
+        rax.ylim([0, np.max(meta.Z)])
 
     cbar = fig.colorbar(c, ax=axes.ravel().tolist(), ticks=ticks)
 
-    spongeWidth = 0 if showSpongeLayer else meta.spongeWidth
-    if oneSided:
-        plt.xlim([0, np.max(meta.X) - spongeWidth])
-    else:
-        plt.xlim([np.min(meta.X) + spongeWidth, np.max(meta.X) - spongeWidth])
-    plt.ylim([0, np.max(meta.Z)])
-
-    fig.tight_layout()
+    #fig.tight_layout()
     plt.savefig(f'data/groups/{directory}.jpg')
 
     #if i == 0:
