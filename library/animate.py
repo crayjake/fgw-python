@@ -282,7 +282,8 @@ def plotGroup(leftData:        np.array,
               skip:            int     = 2,
               directory:       string  = 'test',
               oneSided:        bool    = True,
-              figsize = (15,15)
+              figsize = (15,15),
+              cbarpad = 0.05
               ):
 
     print(f'Starting animation: {directory}')
@@ -346,6 +347,6 @@ def plotGroup(leftData:        np.array,
 
     fig.tight_layout()
     # axes.ravel().tolist()
-    cbar = fig.colorbar(c, ax=axes.ravel().tolist(), ticks=ticks, location='bottom', shrink=0.5, pad=0.05)
+    cbar = fig.colorbar(c, ax=axes.ravel().tolist(), ticks=ticks, location='bottom', shrink=0.5, pad=cbarpad)
 
     plt.savefig(f'data/groups/{directory}.jpg', bbox_inches = 'tight', pad_inches = 0)
