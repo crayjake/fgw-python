@@ -142,6 +142,8 @@ def NoRotationExact(meta: Meta, time: int, mode: int) -> State:
     p   = np.zeros(x.shape)
     rho = np.zeros(x.shape)
 
+    return State(u=u, v=v, w=w, p=p, b=b, rho=rho, t=time)
+
 
 
 def evalW(meta: Meta, x, t, Q, j):
