@@ -166,7 +166,7 @@ def NoRotationExact(meta: Meta, time: int, mode: int) -> State:
     u   = evalU(meta, x, time, mode, S_j, sqrt(c_jSquared))
     v   = np.zeros(x.shape)
     w   = evalW(meta, x, time, mode, S_j, sqrt(c_jSquared))
-    b   = np.zeros(x.shape) #evalB(meta, x, time, 1, mode)
+    b   = evalB(meta, x, time, mode, S_j, sqrt(c_jSquared))
     p   = np.zeros(x.shape)
     rho = np.zeros(x.shape)
 
@@ -192,3 +192,12 @@ def evalU(meta: Meta, x, t, j, S0sigmaN, c_j):
     part3 = - H(t - meta.T) * (G(x + (c_j * (t - meta.T)), L) + G(x - (c_j * (t - meta.T)), L)) / 2
 
     return S0sigmaN * (part1 + part2 + part3)
+
+
+def evalB(meta: Meta, x, t, j, S0sigmaN, c_j):
+    L = meta.L
+
+    part1 = - (G(x + (c_j * t), L) - G(x - (c_j * t), L)) / 2
+    part2 = H(t - meta.T) * (G(x + (c_j * (t - meta.T)), L) - G(x - (c_j * (t - meta.T)), L)) / 2
+
+    return c_j * S0sigmaN * (part1 + part2)
