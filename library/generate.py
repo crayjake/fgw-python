@@ -69,8 +69,8 @@ def evaluate(meta: Meta, times: list, evaluator: Callable[[Meta, int, int], Stat
 
     output = np.append(output, [inp], 0)
 
-    for t in tqdm.tqdm(times):
-        inp = State(u=np.copy(empty), v=np.copy(empty), w=np.copy(empty), b=np.copy(empty), p=np.copy(empty), rho=np.copy(empty), t=t*meta.dt)
+    for t in times:
+        inp = State(u=np.copy(empty), v=np.copy(empty), w=np.copy(empty), b=np.copy(empty), p=np.copy(empty), rho=np.copy(empty), t=t)
         for i, j in enumerate(meta.js):
             # step the data using provided scheme
             sample     = evaluator(meta, t, j)
