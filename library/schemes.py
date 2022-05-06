@@ -135,10 +135,38 @@ def Simple(meta: Meta, inp: State, i: int) -> State:
 def NoRotationExact(meta: Meta, time: int, mode: int) -> State:
     x = meta.x[0, :]
 
-    u   = evalU(meta, x, time, 1, mode)
+    # deep param
+    j = mode
+    h = meta.h * 1000
+    rho_s = 1
+    g = 10 # gravity
+    N = meta.N
+    D = meta.D
+    D_t = meta.D_t * 1000
+
+    # modal variables
+    A_j = sqrt(2 / (rho_s * (N ** 2) * meta.D))
+    
+    if h == 0:
+        c_jSquared = ((N * D) / (mode * pi)) ** 2 # wavespeed
+    else:
+        c_jSquared = ((N * D) ** 2) / (((mode * pi) ** 2) + ((D ** 2)/(4 * (h ** 2)))) # wavespeed
+
+    # calculating S_j
+    if ((j * D_t / D) - 1) == 0:
+        S_j = A_j * (rho_s / 2) * D_t
+    else:
+        S_A = np.sin((np.pi) * ((j * D_t / D) - 1)) / ((j * D_t / D) - 1)
+        S_B = np.sin((np.pi) * ((j * D_t / D) + 1)) / ((j * D_t / D) + 1)
+        S_j = A_j * (rho_s / 2) * (D_t / np.pi) * (S_A - S_B)
+
+    S_j = S_j * meta.S0
+
+
+    u   = evalU(meta, x, time, mode, S_j, sqrt(c_jSquared))
     v   = np.zeros(x.shape)
-    w   = evalW(meta, x, time, 1, mode)
-    b   = evalB(meta, x, time, 1, mode)
+    w   = evalW(meta, x, time, mode, S_j, sqrt(c_jSquared))
+    b   = np.zeros(x.shape) #evalB(meta, x, time, 1, mode)
     p   = np.zeros(x.shape)
     rho = np.zeros(x.shape)
 
@@ -146,28 +174,21 @@ def NoRotationExact(meta: Meta, time: int, mode: int) -> State:
 
 
 
-def evalW(meta: Meta, x, t, Q, j):
-    D = meta.D
+def evalW(meta: Meta, x, t, j, S0sigmaN, c_j):
     L = meta.L
-    N = meta.N
-    part1 = 2*F(x, L)
-    part2 = -F(x + (N*D*t)/(j*np.pi), L)
-    part3 = -F(x - (N*D*t)/(j*np.pi), L)
-    return (meta.S0 * Q/(2*(N**2))) * (part1 + part2 + part3)# * np.sin((j*np.pi*z)/D)
 
-def evalB(meta: Meta, x, t, Q, j):
-    D = meta.D
-    L = meta.L
-    N = meta.N
-    part1 = G(x + (N*D*t)/(j*np.pi), L)
-    part2 = - G(x - (N*D*t)/(j*np.pi), L)
-    return ((meta.S0 * Q * j*np.pi) /(2*N*D)) * (part1 + part2)# * np.sin((j*np.pi*z)/D)
+    part1 = (1 - H(t - meta.T)) * F(x)
+    part2 = - (F(x + (c_j * t)) + F(x - (c_j * t))) / 2
+    part3 = H(t - meta.T) * (F(x + (c_j * (t - meta.T))) + F(x - (c_j * (t - meta.T)))) / 2
 
-def evalU(meta: Meta, x, t, Q, j):
-    D = meta.D
+    return S0sigmaN * (part1 + part2 + part3)
+
+
+def evalU(meta: Meta, x, t, Q, j, S0sigmaN, c_j):
     L = meta.L
-    N = meta.N
-    part1 = G(x + (((N*D*t)/(j*np.pi))), L)
-    part2 = G(x - (((N*D*t)/(j*np.pi))), L)
-    part3 = -2 * G(x, L)
-    return ((meta.S0 * Q * j * np.pi)/(2 * D * N * N)) * (part1 + part2 + part3)# * np.cos((j*np.pi*z)/D)
+
+    part1 = - (1 - H(t - meta.T)) * G(x)
+    part2 = (G(x + (c_j * t)) + G(x - (c_j * t))) / 2
+    part3 = - H(t - meta.T) * (G(x + (c_j * (t - meta.T))) + G(x - (c_j * (t - meta.T)))) / 2
+
+    return S0sigmaN * (part1 + part2 + part3)
