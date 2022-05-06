@@ -51,7 +51,7 @@ def generate(meta: Meta, step: Callable[[State, int], State]):
     return output
 
 
-def evaluate(meta: Meta, times: list, evaluator: Callable[[Meta, int, int], State]) -> np.ndaray:
+def evaluate(meta: Meta, times: list, evaluator: Callable[[Meta, int, int], State]) -> np.ndarray:
     print(f'Generating data...')
     output = np.array([])
 
