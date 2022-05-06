@@ -184,7 +184,7 @@ def evalW(meta: Meta, x, t, j, S0sigmaN, c_j):
     return S0sigmaN * (part1 + part2 + part3)
 
 
-def evalU(meta: Meta, x, t, Q, j, S0sigmaN, c_j):
+def evalU(meta: Meta, x, t, j, S0sigmaN, c_j):
     L = meta.L
 
     part1 = - (1 - H(t - meta.T)) * G(x)
