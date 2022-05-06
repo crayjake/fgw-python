@@ -177,9 +177,9 @@ def NoRotationExact(meta: Meta, time: int, mode: int) -> State:
 def evalW(meta: Meta, x, t, j, S0sigmaN, c_j):
     L = meta.L
 
-    part1 = (1 - H(t - meta.T)) * F(x)
-    part2 = - (F(x + (c_j * t)) + F(x - (c_j * t))) / 2
-    part3 = H(t - meta.T) * (F(x + (c_j * (t - meta.T))) + F(x - (c_j * (t - meta.T)))) / 2
+    part1 = (1 - H(t - meta.T)) * F(x, L)
+    part2 = - (F(x + (c_j * t), L) + F(x - (c_j * t)), L) / 2
+    part3 = H(t - meta.T) * (F(x + (c_j * (t - meta.T)), L) + F(x - (c_j * (t - meta.T)), L)) / 2
 
     return S0sigmaN * (part1 + part2 + part3)
 
@@ -187,8 +187,8 @@ def evalW(meta: Meta, x, t, j, S0sigmaN, c_j):
 def evalU(meta: Meta, x, t, j, S0sigmaN, c_j):
     L = meta.L
 
-    part1 = - (1 - H(t - meta.T)) * G(x)
-    part2 = (G(x + (c_j * t)) + G(x - (c_j * t))) / 2
-    part3 = - H(t - meta.T) * (G(x + (c_j * (t - meta.T))) + G(x - (c_j * (t - meta.T)))) / 2
+    part1 = - (1 - H(t - meta.T)) * G(x, L)
+    part2 = (G(x + (c_j * t), L) + G(x - (c_j * t), L)) / 2
+    part3 = - H(t - meta.T) * (G(x + (c_j * (t - meta.T)), L) + G(x - (c_j * (t - meta.T)), L)) / 2
 
     return S0sigmaN * (part1 + part2 + part3)
