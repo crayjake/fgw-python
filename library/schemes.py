@@ -200,4 +200,4 @@ def evalB(meta: Meta, x, t, j, S0sigmaN, c_j):
     part1 = - (G(x + (c_j * t), L) - G(x - (c_j * t), L)) / 2
     part2 = H(t - meta.T) * (G(x + (c_j * (t - meta.T)), L) - G(x - (c_j * (t - meta.T)), L)) / 2
 
-    return c_j * S0sigmaN * (part1 + part2)
+    return - c_j * S0sigmaN * (part1 + part2)
