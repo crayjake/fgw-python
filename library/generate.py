@@ -49,3 +49,40 @@ def generate(meta: Meta, step: Callable[[State, int], State]):
             output = np.append(output, [inp], 0)
 
     return output
+
+
+def evaluate(meta: Meta, times: list, evaluator: Callable[[Meta, int, int], State]) -> np.ndaray:
+    print(f'Generating data...')
+    output = np.array([])
+
+    empty = np.array([np.zeros(meta.x.shape[1], dtype='float64')] * len(meta.js))
+
+    u   = np.copy(empty)
+    v   = np.copy(empty)
+    w   = np.copy(empty)
+    b   = np.copy(empty)
+    p   = np.copy(empty)
+    rho = np.copy(empty)
+
+    inp = State(u=u, v=v, w=w, b=b, p=p, rho=rho, t=0)
+    inp._2D()
+
+    output = np.append(output, [inp], 0)
+
+    for t in tqdm.tqdm(range(1, int(meta.timesteps))):
+        inp = State(u=np.copy(empty), v=np.copy(empty), w=np.copy(empty), b=np.copy(empty), p=np.copy(empty), rho=np.copy(empty), t=t*meta.dt)
+        for i, j in enumerate(meta.js):
+            # step the data using provided scheme
+            sample     = evaluator(meta, t, j)
+            inp.u[i]   = sample.u
+            inp.v[i]   = sample.v
+            inp.w[i]   = sample.w
+            inp.b[i]   = sample.b
+            inp.p[i]   = sample.p
+            inp.rho[i] = sample.rho
+        # ensure data is correct shape
+        inp._2D()
+        
+        output = np.append(output, [inp], 0)
+
+    return output

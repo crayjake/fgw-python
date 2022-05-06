@@ -124,3 +124,48 @@ def Simple(meta: Meta, inp: State, i: int) -> State:
 
 
     return State(u=u, v=v, w=inp.w, p=inp.p, b=u, rho=inp.rho, t=inp.t + meta.dt)
+
+
+
+
+
+
+
+
+def NoRotationExact(meta: Meta, time: int, mode: int) -> State:
+    x = meta.x[0, :]
+
+    u   = evalU(meta, x, time, 1, mode)
+    v   = np.zeros(x.shape)
+    w   = evalW(meta, x, time, 1, mode)
+    b   = evalB(meta, x, time, 1, mode)
+    p   = np.zeros(x.shape)
+    rho = np.zeros(x.shape)
+
+
+
+def evalW(meta: Meta, x, t, Q, j):
+    D = meta.D
+    L = meta.L
+    N = meta.N
+    part1 = 2*F(x, L)
+    part2 = -F(x + (N*D*t)/(j*np.pi), L)
+    part3 = -F(x - (N*D*t)/(j*np.pi), L)
+    return (meta.S0 * Q/(2*(N**2))) * (part1 + part2 + part3)# * np.sin((j*np.pi*z)/D)
+
+def evalB(meta: Meta, x, t, Q, j):
+    D = meta.D
+    L = meta.L
+    N = meta.N
+    part1 = G(x + (N*D*t)/(j*np.pi), L)
+    part2 = - G(x - (N*D*t)/(j*np.pi), L)
+    return ((meta.S0 * Q * j*np.pi) /(2*N*D)) * (part1 + part2)# * np.sin((j*np.pi*z)/D)
+
+def evalU(meta: Meta, x, t, Q, j):
+    D = meta.D
+    L = meta.L
+    N = meta.N
+    part1 = G(x + (((N*D*t)/(j*np.pi))), L)
+    part2 = G(x - (((N*D*t)/(j*np.pi))), L)
+    part3 = -2 * G(x, L)
+    return ((meta.S0 * Q * j * np.pi)/(2 * D * N * N)) * (part1 + part2 + part3)# * np.cos((j*np.pi*z)/D)
