@@ -14,6 +14,8 @@ def trapezium(func, bounds, delta, display = False):
     steps = (bounds[1] - bounds[0]) / delta
 
     if display:
+        print(f'trapezium: {bounds}, {delta}')
+
         for i in tqdm(range(1, floor(steps))):
             result += delta * func(bounds[0] + (delta * i))
 
