@@ -8,7 +8,7 @@ from math import floor
 from tqdm import tqdm
 
 
-def trapezium(func, bounds, delta, display):
+def trapezium(func, bounds, delta, display = False):
     result = delta * (func(bounds[0]) + func(bounds[1])) / 2
 
     steps = (bounds[1] - bounds[0]) / delta
