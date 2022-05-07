@@ -12,15 +12,15 @@ L = 10000 # forcing width
 
 # cache of fourier transforms
 cachedFourier = {}
-def Fourier(func, k):
+def Fourier(func, k, m=50,s=2500):
     val = func(10)
     if func in cachedFourier:
         if k in cachedFourier[val]:
             return cachedFourier[val][k]
         
     
-    xMax = 50 * L
-    dx = xMax / steps
+    xMax = m * L
+    dx = xMax / s
     # e^ix   = cos(x) + i*sin(x)
     # e^-ikx = e^i(-kx) = cos(-kx) + i*sin(-kx) = cos(kx) - i*sin(kx)
     function = lambda x: exp(k * x * -1j) * func(x) 
@@ -33,9 +33,9 @@ def Fourier(func, k):
     return value
 
 
-def InverseFourier(func, x):
-    kMax = 30 / L
-    dk = kMax / steps
+def InverseFourier(func, x, m=10,s=2500):
+    kMax = m / L
+    dk = kMax / s
 
     function = lambda k: exp(k * x * 1j) * func(k)
 
