@@ -13,9 +13,10 @@ L = 10000 # forcing width
 # cache of fourier transforms
 cachedFourier = {}
 def Fourier(func, k):
+    val = func(10)
     if func in cachedFourier:
-        if k in cachedFourier[func]:
-            return cachedFourier[func][k]
+        if k in cachedFourier[val]:
+            return cachedFourier[val][k]
         
     
     xMax = 50 * L
@@ -26,8 +27,8 @@ def Fourier(func, k):
     value = trapezium(function, (-xMax, xMax), dx)
 
     if func not in cachedFourier:
-        cachedFourier[func] = {}
-    cachedFourier[func][k] = value
+        cachedFourier[val] = {}
+    cachedFourier[val][k] = value
 
     return value
 
