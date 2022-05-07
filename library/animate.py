@@ -334,7 +334,15 @@ def plotGroup(leftData:        np.array,
             rax.axis('off')
         else:
             right = rightData[i]
-           
+
+            # takes the differences between the left and right input data
+            '''
+            for b in range(len(meta.js)):
+                right.b[b] = 10 * (right.b[b] - left.b[b])
+                right.u[b] = 10 * (right.u[b] - left.u[b])
+                right.w[b] = 10 * (right.w[b] - left.w[b])
+            '''
+
             c = plotAxes(rax, x, z, right, meta, converter, levels, showStreamPlot, showSpongeLayer, skip)
 
             spongeWidth = 0 if showSpongeLayer else meta.spongeWidth
@@ -349,4 +357,4 @@ def plotGroup(leftData:        np.array,
     # axes.ravel().tolist()
     cbar = fig.colorbar(c, ax=axes.ravel().tolist(), ticks=ticks, location='bottom', shrink=0.5, pad=cbarpad)
 
-    plt.savefig(f'data/groups/{directory}.jpg', bbox_inches = 'tight', pad_inches = 0)
+    plt.savefig(f'data/groups/{directory}.jpg', bbox_inches = 'tight')
