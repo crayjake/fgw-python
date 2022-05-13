@@ -4,6 +4,7 @@
 '''  '''
 
 # imports
+from fgw.structures import DataStruct
 import numpy as np
 
 from typing      import TypeVar
@@ -11,8 +12,6 @@ from math        import sqrt, sin, pi
 
 from .interfaces import SimulationInterface
 from .schemes    import CrankNicolson
-
-G = TypeVar( 'G' )
 
 # system without Boussinesq approximation -> deep atmosphere
 class Deep(SimulationInterface):
@@ -36,11 +35,11 @@ class Deep(SimulationInterface):
         h:                    float,      # scale height                 ( km )
 
         modes:                np.ndarray, # list of modes
-        
-        initialData:          G,          # initial data
-    
+            
         # specific variables
         heatingScaleWidth:    float,      # scale width of heating
+    
+        initialData:          DataStruct = None,          # initial data
     ):
         super().__init__(
             width,
@@ -90,9 +89,9 @@ class Deep(SimulationInterface):
         pass
 
     # set the simulation step as the default CN scheme
-    def SimulationStep(self, data: G) -> List[ G ]:
-            CrankNicolson()
+    def SimulationStep( self, data: DataStruct ) -> DataStruct:
+        return CrankNicolson( self.dt, data )
     
     # converts data to 2D
-    def Convert( self, data: List[ G ] ) -> List[ G ]:
+    def Convert( self, data: list ) -> list:
         pass

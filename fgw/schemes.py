@@ -4,5 +4,10 @@
 ''' Crank-Nicolson schemes '''
 
 
-def CrankNicolson():
-    pass
+from .structures import DataStruct
+
+
+def CrankNicolson( dt: float, data: DataStruct ):
+    data.t += dt
+
+    return data

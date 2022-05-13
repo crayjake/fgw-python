@@ -9,7 +9,7 @@ from typing import TypeVar, List
 
 import numpy as np
 
-G = TypeVar('G')
+from .structures import DataStruct, DefaultData
 
 # class defining all the required info for a simulation
 class SimulationInterface:
@@ -35,8 +35,16 @@ class SimulationInterface:
 
         modes:                np.ndarray, # list of modes
         
-        initialData:          G,          # initial data
+        initialData:          DataStruct,          # initial data
     ):
+        # store inputs
+        self.N = N
+        self.h = h
+        self.time = time
+        self.S0 = S0
+        self.initialData = initialData
+
+
         # convert width and depth to m
         self.width = 1000 * width
         self.depth = 1000 * depth
@@ -50,7 +58,6 @@ class SimulationInterface:
         self.horizontalResolution = horizontalResolution
         self.verticalResolution   = verticalResolution
         self.dt = dt
-        self.intialData = initialData
 
         # calculate the coriolis parameter
         self.f  = (2 * 7.2921 * 1e-5) * sin( latitude )
@@ -95,11 +102,11 @@ class SimulationInterface:
         pass
 
     # method to step the simulation forward
-    def SimulationStep( self, data: G ) -> G:
+    def SimulationStep( self, data: DataStruct ) -> DataStruct:
         pass
 
     # converts data to 2D
-    def Convert( self, data: List[ G ] ) -> List[ G ]:
+    def Convert( self, data: list ) -> list:
         pass
 
     # --- overridable methods ---
@@ -117,6 +124,10 @@ class SimulationInterface:
             endpoint = True
         )
         self.x, self.z = np.meshgrid( self.X, self.Z )
+        
+        if self.initialData == None:
+            self.initialData = DefaultData()
+        self.initialData.GenerateInitialData(self.x.shape)
 
     # generates the central finite difference matrices
     def GenerateDifferentiationMatrices( self ):
@@ -144,6 +155,7 @@ class SimulationInterface:
             A_Rotation - ( self.WaveSpeed( mode ) * ( self.dt ** 2 ) * self.D2 / 4 )
             for mode in self.modes
         ] )
+        self.B = np.copy(self.A)
 
         for a in range( len( self.modes ) ):
             for i in range( self.horizontalResolution ):
@@ -160,13 +172,14 @@ class SimulationInterface:
         ] )
 
 
-    def Simulate( self ) -> List[ G ]:
-        self.data = [ self.initialData ]
+    def Simulate( self ) -> list:
+        data = [ self.initialData ]
+        print(f'initial data: {data}')
 
         for t in range( ceil( self.time / self.dt ) ):
-            self.data.append( self.SimulationStep( self.data[ t ] ) )
+            data.append( self.SimulationStep( data[ t ] ) )
 
-        return self.data
+        return data
 
     # saves every timestep as an image and saves a gif
     def Animate( self, path: str, gif: bool = True ):
